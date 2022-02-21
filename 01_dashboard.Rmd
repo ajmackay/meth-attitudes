@@ -1,0 +1,47 @@
+---
+title: "Data Cleaning"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(dplyr)
+library(gt)
+library(ggplot2)
+library(plotly)
+library(naniar)
+
+load("objects/all-objects.RData")
+
+
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Breakdown of data
+
+```{r}
+#plot for MA users
+
+#plot for non-ma users
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Screening
+
+```{r}
+ggplotly(screen.plot)
+```
+
+### Chart C
+
+```{r}
+
+```
+
