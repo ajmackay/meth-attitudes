@@ -4,15 +4,21 @@ library(gt)
 
 
 # Import ------------------------------------------------------------------
-#### TODO - Automate process to take latest file ####
-
-survey.files <- list.files("data/", pattern = "*.csv")
+survey.files <- list.files("data/", pattern = ".csv")
 survey.file <- survey.files[length(survey.files)]
 
-if(length(survey.file) > 1){
-  stop("Error with reading files")
-}
+#### File moving ####
+to.move <- survey.files[!survey.files == survey.file]
+old.path <- str_c("data/", to.move)
+new.path <- str_c("data/archive/", to.move)
 
+if(!is_empty(to.move)){
+
+if(file.copy(old.path, new.path)){
+  file.remove(old.path)
+}
+}else "nothing to move"
+  
 # Headers
 survey.headers <- read_csv(str_c("data/", survey.file), n_max = 1) %>% 
   names() %>% 
@@ -26,15 +32,24 @@ survey.raw <- read_csv(str_c("data/", survey.file), skip = 2)
 colnames(survey.raw) <- survey.headers
 
 survey.raw <- survey.raw %>% 
-  mutate(id = row_number())
+  mutate(id = row_number(),
+         .before = 1)
 
 
-# Cleaning ----------------------------------------------------------------
-#### Demographics - screened ####
-dems.df <- survey.raw %>% 
+# Clean -------------------------------------------------------------------
+#### Screened ####
+survey.screened <- survey.raw %>% 
   filter(status == "IP Address",
          q126.13 %in% c("Full license (current/valid)", "Full license (expired/revoked)")) %>% 
+  mutate(ma.ingest = fct_recode(as_factor(q47)) %>% replace_na("No"),
+         ma.ingest = ma.ingest == "Yes")
+
+
+# Wrangle -----------------------------------------------------------------
+#### Demographics ####
+dems.df <- survey.screened %>% 
   transmute(id = id,
+            ma.ingest = ma.ingest,
             license.screen = as_factor(q126.13),
             drugs.other.alcohol = q27,
             age = q19,
@@ -64,16 +79,17 @@ dems.df <- survey.raw %>%
             employment.status = as_factor(q17),
             area.live = q21,
             license.status = as_factor(q22),
-            alcohol.ever = as_factor(q28),
-            ma.ingest = fct_recode(as_factor(q47)) %>% replace_na("No") #### TODO Change to logical ####
-  )
+            alcohol.ever = as_factor(q28) == "Yes", # Convert to logical
+            dems.full = if_else(is.na(age) | is.na(sex) | is.na(ethnicity) | is.na(education) | is.na(area.live), FALSE, TRUE)
+            )
+
+
 
 #### AUDIT ####
-audit.df <- survey.raw %>% 
-  filter(status == "IP Address",
-         q126.13 %in% c("Full license (current/valid)", "Full license (expired/revoked)")) %>% 
+audit.df <- survey.screened %>% 
   transmute(
     id = id,
+    ma.ingest = ma.ingest,
     audit.freq = as.numeric(as.character(fct_recode(as_factor(q33.40),
                                                     "0" = "Never",
                                                     "1" = "Monthly or less",
@@ -97,13 +113,12 @@ audit.df <- survey.raw %>%
     ),
     audit.total = audit.freq + audit.typical + audit.six,
     audit.risky = ifelse((q13 == "Male" & audit.total > 2 | 
-                            q13 == "Female" & audit.total > 1), "TRUE", "FALSE")
+                            q13 == "Female" & audit.total > 1), "TRUE", "FALSE"),
+    audit.full = !is.na(audit.total)
   )
 
 #### Drug Use ####
-drug.df <- survey.raw %>% 
-  filter(status == "IP Address",
-         q126.13 %in% c("Full license (current/valid)", "Full license (expired/revoked)")) %>% 
+druguse.df <- survey.screened %>% 
   transmute(
     id = id,
     cocaine = fct_recode(as_factor(q63.1),
@@ -166,10 +181,8 @@ drug.df <- survey.raw %>%
   )
 
 #### MA Use ####
-ma.df <- survey.raw %>% 
-  filter(status == "IP Address",
-         q126.13 %in% c("Full license (current/valid)", "Full license (expired/revoked)"),
-         q47 == "Yes") %>% 
+ma.df <- survey.screened %>% 
+  filter(q47 == "Yes") %>% 
   transmute(
     id = id,
     ma.most.common = as_factor(q48),
@@ -219,15 +232,12 @@ ma.df <- survey.raw %>%
     ma.type = ifelse(sds.total > 4, "MUD", "Recreational"),
     ma.want.to.change = as_factor(q61),
     ma.could.change = as_factor(q62)
-  ) %>% 
-  filter(!is.na(sds.total))
+  )
 
 ma.id <- ma.df %>% pull(id)
 
 #### K6 ####
-k6.df <- survey.raw %>% 
-  filter(status == "IP Address",
-         q126.13 %in% c("Full license (current/valid)", "Full license (expired/revoked)")) %>% 
+k6.df <- survey.screened %>% 
   transmute(
     id = id,
     k6.nervous = as.numeric(fct_recode(as_factor(q33.58),
@@ -273,7 +283,7 @@ k6.df <- survey.raw %>%
     ),
     k6.physical.cause = as.numeric(fct_recode(as_factor(q43),
                                               "1" = "None of the time",
-                                              "2" = "A little of the time", # Doesn't contain this option
+                                              # "2" = "A little of the time", # Doesn't contain this option
                                               "3" = "Some of the time",
                                               "4" = "Most of the time",
                                               "5" = "All of the time")
@@ -283,18 +293,47 @@ k6.df <- survey.raw %>%
 
 
 #### STAXI ####
+##### State #####
+state.df <- 
+  survey.screened %>% 
+  rename_with(~str_c("state.", seq(1, 14)),
+              .cols = q146.1:q146.14) %>% 
+  mutate(across(starts_with("state."), ~case_when(
+    .x == "Not at all" ~ 1,
+    .x == "Somewhat" ~ 2,
+    .x == "Moderately so" ~ 3,
+    .x == "Very much so" ~ 4))) %>% 
+  mutate(state.total = select(., state.1:state.14) %>% 
+           rowSums(),
+         state.full = !is.na(state.total)) %>% 
+  select(id, ma.ingest, starts_with("state"))
+
+##### Trait #####
+# triat.df <-
+trait.df <- survey.screened %>% 
+  rename_with(~str_c("trait.", seq(1, 10)),
+              .cols = q147.1:q147.10) %>% 
+  mutate(across(starts_with("trait."), ~case_when(
+    .x == "Almost never" ~ 1,
+    .x == "Sometimes" ~ 2,
+    .x == "Often" ~ 3,
+    .x == "Almost always" ~ 4
+  ))) %>% 
+  mutate(trait.total = select(., starts_with("trait.")) %>% 
+                                rowSums(),
+                              trait.full = !is.na(trait.total)) %>% 
+           select(id, ma.ingest, starts_with("trait"))
 
 
-#### Summary ####
-# Key dems and totals of assessments
+# STAXI
+staxi.df <- left_join(state.df, trait.df)
 
 
 #### DDDI ####
-dd.df <- survey.raw %>% 
-  filter(status == "IP Address",
-         q126.13 %in% c("Full license (current/valid)", "Full license (expired/revoked)")) %>% 
+dd.df <- survey.screened %>% 
   transmute(
     id = id,
+    ma.ingest = ma.ingest,
     dd.ne.1 = as.numeric(fct_recode(as_factor(q65),
                                     "1" = "Never",
                                     "2" = "Rarely",
@@ -484,23 +523,180 @@ dd.df <- survey.raw %>%
                                      "4" = "Often",
                                      "5" = "Always")
     ),
-    ## DDDI summing up scores
+    ## DDDI summing up scores - TODO make neater
     dd.ne.total = dd.ne.1 + dd.ne.2 + dd.ne.3 + dd.ne.4 + dd.ne.5 + dd.ne.6 + dd.ne.7 + dd.ne.8 + dd.ne.9,
     dd.ad.total = dd.ad.1 + dd.ad.2 + dd.ad.3 + dd.ad.4 + dd.ad.5 + dd.ad.6 + dd.ad.7,
     dd.rd.total = dd.rd.1 + dd.rd.2 + dd.rd.3 + dd.rd.4 + dd.rd.5 + dd.rd.6 + dd.rd.7 + dd.rd.8 + dd.rd.9 + dd.rd.10 + 
       dd.rd.11,
     dd.total = dd.ne.total + dd.ad.total + dd.rd.total,
-    keep.dd = !is.na(dd.total))
+    dd.full = !is.na(dd.total))
+
+
+#### Instances/Attitudes/Strategies ####
+##### DUI Instance and Attitude #####
+dui.ins.att.df <- survey.screened %>% 
+  rename_with(~str_c("dui.instance.", c("revoked", "hurt")),
+              .cols = c(q95, q96)) %>% 
+  rename_with(~str_c("dui.att.", c("friends", "drunk", "jail", "strict", "police", 
+                                  "caught", "once.while", "dumb", "overrated", "lose")),
+              .cols = q97:q106) %>% 
+  mutate(dui.instance.revoked = if_else(dui.instance.revoked == "Yes", T, F),
+         dui.instance.hurt = if_else(dui.instance.hurt == "Yes", T, F),
+         # Strongly agree = 1
+         across(.cols = str_c("dui.att.", c("jail", "strict", "police", "dumb", "lose")), ~case_when(
+           .x == "Strongly Agree" ~ 1,
+           .x == "Agree" ~ 2,
+           .x == "Somewhat agree" ~ 3,
+           .x == "Neither agree nor disagree" ~ 4,
+           .x == "Somewhat disagree" ~ 5,
+           .x == "Disagree" ~ 6,
+           .x == "Strongly disagree" ~ 7)),
+         
+         #Reverse Scoring
+         across(.cols = str_c("dui.att.", c("friends", "drunk", "caught", "once.while", "overrated")), ~case_when(
+           .x == "Strongly Agree" ~ 7,
+           .x == "Agree" ~ 6,
+           .x == "Somewhat agree" ~ 5,
+           .x == "Neither agree nor disagree" ~ 4,
+           .x == "Somewhat disagree" ~ 3,
+           .x == "Disagree" ~ 2,
+           .x == "Strongly disagree" ~ 1))
+  ) %>% 
+  select(id, ma.ingest, starts_with("dui"))
+
+dui.att.df <- dui.ins.att.df %>% 
+  select(id, ma.ingest, starts_with("dui.att"))
+
+dui.ins.df <- dui.ins.att.df %>% 
+  select(id, ma.ingest, starts_with("dui.ins"))
+
+
+##### DUI Strat #####
+dui.strat.df <- survey.screened %>% 
+  rename_with(~str_c("dui.strat.", c("leave", "light", "driver", "use", "taxi", "track", "overnight")),
+              .cols = q107:q113) %>% 
+  mutate(across(.cols = starts_with("dui.strat"), ~case_when(
+    .x == "Definitely yes" ~ 1,
+    .x == "Probably yes" ~ 2,
+    .x == "Might or might not" ~ 3,
+    .x == "Probably not" ~ 4,
+    .x == "Definitely not" ~5,
+    
+    .x == "Extremely likely" ~ 1,
+    .x == "Moderately likely" ~ 2, 
+    .x == "Slightly likely" ~ 2,
+    .x == "Neither likely nor unlikely" ~ 3,
+    .x == "Slightly unlikely" ~ 4,
+    .x == "Moderately unlikely" ~ 4,
+    .x == "Extremely unlikely" ~5)),
+    
+  ) %>% 
+  select(id, ma.ingest, starts_with("dui.strat"))
+
+###### DUI Strat Dichotomous ######
+dui.strat.dich.df <- survey.screened %>% 
+  rename_with(~str_c("dui.strat.dich.", c("leave", "light", "driver", "use", "taxi", "track", "overnight")),
+              .cols = q107:q113) %>% 
+  mutate(across(.cols = starts_with("dui.strat.dich"), ~case_when(
+    .x == "Definitely yes" | 
+      .x == "Probably yes" |
+      .x == "Extremely likely" |
+      .x == "Moderately likely" |
+      .x == "Slightly likely" ~ TRUE,
+    .x == "Might or might not" | 
+      .x == "Probably not" |
+      .x == "Definitely not" |
+      .x == "Neither likely nor unlikely" |
+      .x == "Slightly unlikely" |
+      .x == "Moderately unlikely" |
+      .x == "Extremely unlikely" ~ FALSE))
+  ) %>% 
+  select(id, starts_with("dui.strat"))
+
+
+##### DUID Instances and Attitudes #####
+duid.ins.att.df <- survey.screened %>% 
+  # filter(id %in% ma.id) %>% 
+  #Instances
+  rename_with(~str_c("duid.inst.", c("ever", "last12months", "before12months", 
+                                        "revoked", "hurt")),
+              .cols = c(q114, q118, q120, q122, q123)) %>% 
+  rename(drugs.last.12 = q119,
+         drugs.before.12 = q121,
+         drugs.revoked = q124,
+         drugs.hurt = q125) %>% 
+  rename_with(~str_c("duid.att.", c("friends", "high", "jail", "strict", "police", 
+                                    "caught", "once.while", "dumb", "overrated", "lose")),
+              .cols = c(q126.75, q128:q136)) %>% 
+  
+  mutate(
+    # Instances
+    across(.cols = starts_with("duid.inst"), ~case_when(
+    .x == "Yes" ~ TRUE,
+    .x == "No" ~ FALSE
+  )),
+  # Attitudes
+  # Strongly agree = 1
+  across(.cols = str_c("duid.att.", c("jail", "strict", "police", "dumb", "lose")), ~case_when(
+    .x == "Strongly Agree" ~ 1,
+    .x == "Agree" ~ 2,
+    .x == "Somewhat agree" ~ 3,
+    .x == "Neither agree nor disagree" ~ 4,
+    .x == "Somewhat disagree" ~ 5,
+    .x == "Disagree" ~ 6,
+    .x == "Strongly disagree" ~ 7)),
+  
+  #Reverse Scoring
+  across(.cols = str_c("duid.att.", c("friends", "high", "caught", "once.while", "overrated")), ~case_when(
+    .x == "Strongly Agree" ~ 7,
+    .x == "Agree" ~ 6,
+    .x == "Somewhat agree" ~ 5,
+    .x == "Neither agree nor disagree" ~ 4,
+    .x == "Somewhat disagree" ~ 3,
+    .x == "Disagree" ~ 2,
+    .x == "Strongly disagree" ~ 1)),
+  ) %>%
+  mutate(duid.att.total = select(., duid.att.friends:duid.att.lose) %>% rowSums(na.rm = FALSE),
+         duid.att.full = !is.na(duid.att.total)) %>% 
+  select(id, ma.ingest, starts_with("duid"), duid.att.total)
+
+duid.att.df <- duid.ins.att.df %>% 
+  select(id, ma.ingest, starts_with("duid.att"))
+
+duid.ins.df <- duid.ins.att.df %>% 
+  select(id, ma.ingest, starts_with("duid.inst"))
+
+##### DUID Strat #####
+duid.strat.df <- survey.screened %>% 
+  filter(ma.ingest) %>% 
+  rename_with(~str_c("duid.strat.", c("leave", "less", "driver", "use", "taxi", "track", "overnight")),
+              .cols = q137:q143) %>% 
+  mutate(across(.cols = starts_with("duid.strat"), ~case_when(
+    .x == "Definitely yes" ~ 1,
+    .x == "Probably yes" ~ 2,
+    .x == "Might or might not" ~ 3,
+    .x == "Probably not" ~ 4,
+    .x == "Definitely not" ~5,
+    
+    .x == "Extremely likely" ~ 1,
+    .x == "Moderately likely" ~ 2, 
+    .x == "Slightly likely" ~ 2,
+    .x == "Neither likely nor unlikely" ~ 3,
+    .x == "Slightly unlikely" ~ 4,
+    .x == "Moderately unlikely" ~ 4,
+    .x == "Extremely unlikely" ~5)),
+    
+  ) %>% 
+  mutate(duid.strat.total = select(., starts_with("duid.strat")) %>% rowSums(na.rm = FALSE),
+         duid.strat.full = !is.na(duid.strat.total)) %>% 
+  select(id, ma.ingest, starts_with("duid.strat"))
 
 
 
 
+#### Summary ####
+# Key dems and totals of assessments
 
-# survey.df <- survey.raw %>% 
-#   select(-c(status, recordeddate, userlanguage, q.recaptchascore, responseid)) %>% 
-#   filter(str_detect(q126.13, "Full license"), finished == FALSE) %>% 
-#   count(finished)
-  # Add ID for each
 
 save.image(file = "objects/all-objects.RData")
 

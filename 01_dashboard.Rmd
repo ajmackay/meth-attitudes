@@ -1,9 +1,11 @@
 ---
-title: "Data Cleaning"
+title: "Attitudes Data"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
-    vertical_layout: fill
+    vertical_layout: scroll
+editor_options:
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -13,35 +15,34 @@ library(gt)
 library(ggplot2)
 library(plotly)
 library(naniar)
+library(kableExtra)
 
 load("objects/all-objects.RData")
 
 
 ```
 
-Column {data-width=650}
+Column {data-width=600}
 -----------------------------------------------------------------------
 
-### Breakdown of data
-
 ```{r}
-#plot for MA users
-
-#plot for non-ma users
+ggplotly(dd.duid.att.p)
 ```
 
-Column {data-width=350}
+
+
+
+
+Column {data-width=400}
 -----------------------------------------------------------------------
-
-### Screening
-
 ```{r}
-ggplotly(screen.plot)
-```
-
-### Chart C
-
-```{r}
+ggplotly(duid.att.miss.p + labs())
 
 ```
 
+### Characteristics of people with full responses
+
+```{r}
+duid.att.dems.tbl %>% 
+  scroll_box(height = "100%", width = "100%")
+```
