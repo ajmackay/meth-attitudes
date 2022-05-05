@@ -57,7 +57,9 @@ left_join(dems.df, dd.df) %>%
 
 
 # STAXI -------------------------------------------------------------------
-
+staxi.df %>% 
+    group_by(ma.ingest) %>% 
+    count(trait.full)
 
 
 # DUID Instances and Attitudes  --------------------------------------------------
@@ -205,6 +207,9 @@ ma.df %>%
 miss.x <- select(dems.df, id, ma.ingest) %>% left_join(dd.df) %>% 
   filter(ma.ingest == "Yes") %>% 
   vis_miss()
+
+
+
 
 
 

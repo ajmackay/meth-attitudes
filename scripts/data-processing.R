@@ -41,8 +41,11 @@ survey.raw <- survey.raw %>%
 survey.screened <- survey.raw %>% 
   filter(status == "IP Address",
          q126.13 %in% c("Full license (current/valid)", "Full license (expired/revoked)")) %>% 
+         ## Filter for ma use most common) %>% 
   mutate(ma.ingest = fct_recode(as_factor(q47)) %>% replace_na("No"),
-         ma.ingest = ma.ingest == "Yes")
+         ma.ingest = ma.ingest == "Yes",
+         ma.most.common = q48 == "Yes") %>% 
+  filter(!ma.ingest | ma.ingest & ma.most.common)
 
 
 # Wrangle -----------------------------------------------------------------
@@ -229,6 +232,7 @@ ma.df <- survey.screened %>%
     ),
     sds.total = ((sds.1 - 1) + (sds.2 - 1) + (sds.3 - 1) + 
                   (sds.4 - 1) + (sds.5 - 1)),
+    sds.full = !is.na(sds.total),
     ma.type = ifelse(sds.total > 4, "MUD", "Recreational"),
     ma.want.to.change = as_factor(q61),
     ma.could.change = as_factor(q62)
@@ -240,6 +244,7 @@ ma.id <- ma.df %>% pull(id)
 k6.df <- survey.screened %>% 
   transmute(
     id = id,
+    ma.ingest = ma.ingest,
     k6.nervous = as.numeric(fct_recode(as_factor(q33.58),
                                        "1" = "None of the time",
                                        "2" = "A little of the time",
@@ -289,6 +294,7 @@ k6.df <- survey.screened %>%
                                               "5" = "All of the time")
     ),
     k6.total = k6.nervous + k6.hopeless + k6.restless + k6.depressed + k6.effort + k6.worthless,
+    k6.full = !is.na(k6.total)
   )
 
 
@@ -309,7 +315,6 @@ state.df <-
   select(id, ma.ingest, starts_with("state"))
 
 ##### Trait #####
-# triat.df <-
 trait.df <- survey.screened %>% 
   rename_with(~str_c("trait.", seq(1, 10)),
               .cols = q147.1:q147.10) %>% 
@@ -534,15 +539,18 @@ dd.df <- survey.screened %>%
 
 #### Instances/Attitudes/Strategies ####
 ##### DUI Instance and Attitude #####
-dui.ins.att.df <- survey.screened %>% 
-  rename_with(~str_c("dui.instance.", c("revoked", "hurt")),
+dui.inst.att.df <- survey.screened %>% 
+  # Instances
+  rename_with(~str_c("dui.inst.", c("revoked", "hurt")),
               .cols = c(q95, q96)) %>% 
+  mutate(dui.inst.revoked = dui.inst.revoked == "Yes",
+         dui.inst.hurt = dui.inst.hurt == "Yes") %>% 
+  
+  # Attitudes
   rename_with(~str_c("dui.att.", c("friends", "drunk", "jail", "strict", "police", 
                                   "caught", "once.while", "dumb", "overrated", "lose")),
               .cols = q97:q106) %>% 
-  mutate(dui.instance.revoked = if_else(dui.instance.revoked == "Yes", T, F),
-         dui.instance.hurt = if_else(dui.instance.hurt == "Yes", T, F),
-         # Strongly agree = 1
+  mutate(# Strongly agree = 1
          across(.cols = str_c("dui.att.", c("jail", "strict", "police", "dumb", "lose")), ~case_when(
            .x == "Strongly Agree" ~ 1,
            .x == "Agree" ~ 2,
@@ -562,13 +570,16 @@ dui.ins.att.df <- survey.screened %>%
            .x == "Disagree" ~ 2,
            .x == "Strongly disagree" ~ 1))
   ) %>% 
+  mutate(dui.att.total = select(., starts_with("dui.att")) %>% 
+           rowSums(na.rm = FALSE),
+         dui.att.full = !is.na(dui.att.total)) %>% 
   select(id, ma.ingest, starts_with("dui"))
 
 dui.att.df <- dui.ins.att.df %>% 
   select(id, ma.ingest, starts_with("dui.att"))
 
-dui.ins.df <- dui.ins.att.df %>% 
-  select(id, ma.ingest, starts_with("dui.ins"))
+dui.inst.df <- dui.inst.att.df %>% 
+  select(id, ma.ingest, starts_with("dui.inst"))
 
 
 ##### DUI Strat #####
@@ -591,6 +602,9 @@ dui.strat.df <- survey.screened %>%
     .x == "Extremely unlikely" ~5)),
     
   ) %>% 
+  mutate(dui.strat.total = select(., starts_with("dui.strat")) %>% 
+           rowSums(na.rm = FALSE),
+         dui.strat.full = !is.na(dui.strat.total)) %>% 
   select(id, ma.ingest, starts_with("dui.strat"))
 
 ###### DUI Strat Dichotomous ######
@@ -611,11 +625,11 @@ dui.strat.dich.df <- survey.screened %>%
       .x == "Moderately unlikely" |
       .x == "Extremely unlikely" ~ FALSE))
   ) %>% 
-  select(id, starts_with("dui.strat"))
+  select(id, ma.ingest, starts_with("dui.strat"))
 
 
 ##### DUID Instances and Attitudes #####
-duid.ins.att.df <- survey.screened %>% 
+duid.inst.att.df <- survey.screened %>% 
   # filter(id %in% ma.id) %>% 
   #Instances
   rename_with(~str_c("duid.inst.", c("ever", "last12months", "before12months", 
@@ -656,14 +670,21 @@ duid.ins.att.df <- survey.screened %>%
     .x == "Disagree" ~ 2,
     .x == "Strongly disagree" ~ 1)),
   ) %>%
-  mutate(duid.att.total = select(., duid.att.friends:duid.att.lose) %>% rowSums(na.rm = FALSE),
+  mutate(
+    duid.inst.total = select(., starts_with("duid.ins")) %>% 
+      rowSums(na.rm = FALSE),
+    duid.inst.full = !is.na(duid.inst.total),
+         duid.att.total = select(., duid.att.friends:duid.att.lose) %>% rowSums(na.rm = FALSE),
          duid.att.full = !is.na(duid.att.total)) %>% 
   select(id, ma.ingest, starts_with("duid"), duid.att.total)
+
+
+
 
 duid.att.df <- duid.ins.att.df %>% 
   select(id, ma.ingest, starts_with("duid.att"))
 
-duid.ins.df <- duid.ins.att.df %>% 
+duid.inst.df <- duid.inst.att.df %>% 
   select(id, ma.ingest, starts_with("duid.inst"))
 
 ##### DUID Strat #####
@@ -691,11 +712,29 @@ duid.strat.df <- survey.screened %>%
          duid.strat.full = !is.na(duid.strat.total)) %>% 
   select(id, ma.ingest, starts_with("duid.strat"))
 
-
+# Might be worth checking this
+duid.strat.dich.df <- duid.strat.df %>%
+  select(-c(duid.strat.total, duid.strat.full)) %>% 
+  mutate(across(.cols = starts_with("duid.strat"), ~case_when(
+    .x >= 3 ~ TRUE,
+    .x < 3 ~ FALSE
+  ))) %>% 
+  mutate(duid.strat.total = select(., starts_with("duid.strat")) %>% 
+           rowSums(na.rm = FALSE))
 
 
 #### Summary ####
 # Key dems and totals of assessments
+summ.df <- dems.df %>% 
+  left_join(select(audit.df, id, audit.total, audit.risky, audit.full)) %>% 
+  left_join(select(ma.df, id, sds.total, sds.full, ma.type)) %>% 
+  left_join(select(k6.df, id, k6.total, k6.full)) %>% 
+  left_join(select(staxi.df, id, state.total, state.full, trait.total, trait.full)) %>% 
+  left_join(select(dd.df, id, dd.total, dd.full)) %>% 
+  left_join(select(dui.inst.att.df, id, dui.inst.revoked, dui.att.total, dui.att.full)) %>% 
+  left_join(select(dui.strat.df, id, dui.strat.total, dui.strat.full)) %>%
+  left_join(select(duid.inst.att.df, id, duid.inst.revoked, duid.att.total, duid.att.full)) %>% 
+  left_join(select(duid.strat.df, id, duid.strat.total, duid.strat.full))
 
 
 save.image(file = "objects/all-objects.RData")
