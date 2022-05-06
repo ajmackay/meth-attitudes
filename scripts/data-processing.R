@@ -2,8 +2,7 @@ library(tidyverse)
 library(janitor)
 library(gt)
 
-## This is a test 
-x <- 3
+
 # Import ------------------------------------------------------------------
 survey.files <- list.files("data/", pattern = ".csv")
 survey.file <- survey.files[length(survey.files)]
@@ -14,27 +13,34 @@ old.path <- str_c("data/", to.move)
 new.path <- str_c("data/archive/", to.move)
 
 if(!is_empty(to.move)){
-
-if(file.copy(old.path, new.path)){
-  file.remove(old.path)
-}
-}else "nothing to move"
   
-# Headers
-survey.headers <- read_csv(str_c("data/", survey.file), n_max = 1) %>% 
-  names() %>% 
-  tolower() %>% 
-  str_replace("\\.\\.\\.", "\\.") %>% 
-  str_replace("\\_", "\\.") %>% 
-  str_replace("duration \\(in seconds\\)", "duration")
+  if(file.copy(old.path, new.path)){
+    file.remove(old.path)
+  }
+  
+  # Headers
+  survey.headers <- read_csv(str_c("data/", survey.file), n_max = 1) %>% 
+    names() %>% 
+    tolower() %>% 
+    str_replace("\\.\\.\\.", "\\.") %>% 
+    str_replace("\\_", "\\.") %>% 
+    str_replace("duration \\(in seconds\\)", "duration")
+  
+  survey.raw <- read_csv(str_c("data/", survey.file), skip = 2)
+  
+  colnames(survey.raw) <- survey.headers
+  
+  survey.raw <- survey.raw %>% 
+    mutate(id = row_number(),
+           .before = 1)
+  
+  saveRDS(survey.raw, file = "")
+  
+  
+  
+}else "Just get the previously done raw data"
+  
 
-survey.raw <- read_csv(str_c("data/", survey.file), skip = 2)
-
-colnames(survey.raw) <- survey.headers
-
-survey.raw <- survey.raw %>% 
-  mutate(id = row_number(),
-         .before = 1)
 
 
 # Clean -------------------------------------------------------------------
@@ -740,4 +746,7 @@ summ.df <- dems.df %>%
 
 save.image(file = "objects/all-objects.RData")
 
+readRDS("objects/all-objects.RData")
+
+load("objects/")
 
