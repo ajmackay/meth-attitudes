@@ -56,6 +56,23 @@ left_join(dems.df, dd.df) %>%
 
 
 
+# Summary -----------------------------------------------------------------
+# How many MA responses are full
+summ.df %>% 
+    filter(ma.ingest,
+           dems.full,
+           audit.full,
+           sds.full,
+           trait.full,
+           dd.full,
+           dui.strat.full,
+           duid.strat.full,
+           dui.att.full,
+           # duid.att.full - takes a way like 25 responses if include
+           ) %>% 
+    count()
+
+
 # STAXI -------------------------------------------------------------------
 staxi.df %>% 
     group_by(ma.ingest) %>% 
