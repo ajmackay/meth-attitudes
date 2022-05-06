@@ -34,16 +34,14 @@ if(!is_empty(to.move)){
     mutate(id = row_number(),
            .before = 1)
   
-  saveRDS(survey.raw, file = "")
+  saveRDS(survey.raw, file = "objects/survey-raw.RData")
   
-  
-  
-}else "Just get the previously done raw data"
+}else survey.raw <- readRDS("objects/survey-raw.RData")
   
 
 
 
-# Clean -------------------------------------------------------------------
+# Data Processing -------------------------------------------------------------------
 #### Screened ####
 survey.screened <- survey.raw %>% 
   filter(status == "IP Address",
@@ -55,7 +53,6 @@ survey.screened <- survey.raw %>%
   filter(!ma.ingest | ma.ingest & ma.most.common)
 
 
-# Wrangle -----------------------------------------------------------------
 #### Demographics ####
 dems.df <- survey.screened %>% 
   transmute(id = id,
@@ -582,7 +579,7 @@ dui.inst.att.df <- survey.screened %>%
          dui.att.full = !is.na(dui.att.total)) %>% 
   select(id, ma.ingest, starts_with("dui"))
 
-dui.att.df <- dui.ins.att.df %>% 
+dui.att.df <- dui.inst.att.df %>% 
   select(id, ma.ingest, starts_with("dui.att"))
 
 dui.inst.df <- dui.inst.att.df %>% 
@@ -688,7 +685,7 @@ duid.inst.att.df <- survey.screened %>%
 
 
 
-duid.att.df <- duid.ins.att.df %>% 
+duid.att.df <- duid.inst.att.df %>% 
   select(id, ma.ingest, starts_with("duid.att"))
 
 duid.inst.df <- duid.inst.att.df %>% 
@@ -745,8 +742,4 @@ summ.df <- dems.df %>%
 
 
 save.image(file = "objects/all-objects.RData")
-
-readRDS("objects/all-objects.RData")
-
-load("objects/")
 
