@@ -1,8 +1,13 @@
+alcohol.ids <- dems.df %>% 
+  filter(alcohol.ever) %>% pull(id)
+
 audit.id <- audit.df %>% 
   filter(!is.na(audit.total)) %>% 
   pull(id)
 
-
+audit.df %>% 
+  filter(!audit.full,
+         id %in% alcohol.ids)
 
 
 

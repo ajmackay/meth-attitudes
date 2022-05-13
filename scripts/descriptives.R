@@ -1,8 +1,5 @@
-library(table1)
-library(gt)
-library(plotly)
-library(naniar)
-library(kableExtra)
+packages <- c("tidyverse", "janitor", "table1", "gt", "naniar", "kableExtra")
+librarian::shelf(packages)
 
 # source("scripts/data-processing.R")
 load("objects/all-objects.RData")
@@ -13,6 +10,35 @@ ma.names <- c(
 )
 
 theme_set(theme_light())
+
+
+# Final Particpants -------------------------------------------------------
+n.ma.id <- summ.df %>% 
+  filter(!ma.ingest,
+         dems.full,
+         audit.full,
+         # sds.full,
+         trait.full,
+         dd.full,
+         # dui.strat.full,
+         # duid.strat.full,
+         # dui.att.full,
+         duid.att.full
+  ) %>% pull(id)
+
+ma.id <- summ.df %>% 
+  filter(ma.ingest,
+         dems.full,
+         audit.full,
+         # sds.full,
+         trait.full,
+         dd.full,
+         # dui.strat.full,
+         # duid.strat.full,
+         # dui.att.full,
+         duid.att.full
+  ) %>% pull(id)
+
 
 # Response Numbers --------------------------------------------------------
 
@@ -62,21 +88,36 @@ summ.df %>%
     filter(ma.ingest,
            dems.full,
            audit.full,
-           sds.full,
+           # sds.full,
            trait.full,
            dd.full,
-           dui.strat.full,
-           duid.strat.full,
-           dui.att.full,
-           # duid.att.full - takes a way like 25 responses if include
+           # dui.strat.full,
+           # duid.strat.full,
+           # dui.att.full,
+           duid.att.full
            ) %>% 
-    count()
+    count(license.status)
+  
+summ.df %>% 
+  filter(!ma.ingest,
+         dems.full,
+         audit.full,
+         # sds.full,
+         trait.full,
+         dd.full,
+         duid.att.full) %>% 
+  count()
 
-
+vis_miss(summ.df)
 # STAXI -------------------------------------------------------------------
 staxi.df %>% 
     group_by(ma.ingest) %>% 
     count(trait.full)
+
+
+
+# Demographics ------------------------------------------------------------
+
 
 
 # DUID Instances and Attitudes  --------------------------------------------------
@@ -209,7 +250,9 @@ duid.strat.df %>%
 # Number who said yes/no to ever drinking who completed the AUDIT
 audit.df %>% left_join(select(dems.df, id, ma.ingest, alcohol.ever)) %>% 
   group_by(ma.ingest, alcohol.ever) %>% 
-  count(audit.full)
+  count(audit.full) %>%
+  group_by(ma.ingest) %>% 
+  mutate(total.n = sum(n))
 
 # Missing data ------------------------------------------------------------
 #### SDS ####
