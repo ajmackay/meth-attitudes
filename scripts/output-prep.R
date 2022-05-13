@@ -1,3 +1,5 @@
+packages <- c(packages, "stargazer")
+librarian::shelf(packages)
 
 # Comparison Tables -------------------------------------------------------
 #### Demographics ####
