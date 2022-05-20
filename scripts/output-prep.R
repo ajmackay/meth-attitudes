@@ -1,4 +1,4 @@
-packages <- append(packages, "stargazer")
+packages <- append(packages, c("stargazer", "flextable"))
 librarian::shelf(packages)
 
 # Comparison Tables -------------------------------------------------------
@@ -53,7 +53,8 @@ label(dems.df$alcohol.ever) <- "Ever Used Alcohol?"
 table1(~ license.status + age + sex + education + employment.status +
          area.live + alcohol.ever | ma.ingest, data = filter(dems.df, id %in% c(ma.id, n.ma.id)),
        overall = FALSE, extra.col = list(`P-value` = pvalue)) %>% 
-  kable()
+  t1flex() %>% 
+  save_as_docx(path = "output/dems-table.docx")
 
 
 

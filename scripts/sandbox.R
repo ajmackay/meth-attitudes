@@ -1,11 +1,16 @@
 # Tings -------------------------------------------------------------------
+summ.df %>% select(id, ma.ingest, dems.full, audit.full, trait.full, dd.full, duid.att.full) %>% 
+  filter(!ma.ingest) %>% 
+  replace_with_na(replace = list(dems.full = FALSE, audit.full = FALSE, trait.full = FALSE, dd.full = FALSE, duid.att.full = FALSE)) %>%
+  filter(duid.att.full) %>% view
+  summarise(duid.present = sum(duid.att.full, na.rm = TRUE))
+
+  
+dems.df %>% filter(id == 75)
 
 
 
 
-
-alcohol.ids <- dems.df %>% 
-  filter(alcohol.ever) %>% pull(id)
 
 audit.id <- audit.df %>% 
   filter(!is.na(audit.total)) %>% 
