@@ -26,6 +26,14 @@ n.ma.id <- summ.df %>%
          duid.att.full
   ) %>% pull(id)
 
+summ.df %>% 
+  filter(!ma.ingest,
+         dems.full,
+         audit.full,
+         trait.full,
+         dd.full,
+         duid.att.full)
+
 ma.id <- summ.df %>% 
   filter(ma.ingest,
          dems.full,
@@ -209,7 +217,7 @@ dd.duid.att.p <- duid.att.df %>%
 
 
 
-duid.ins.att.df %>% 
+duid.inst.att.df %>% 
   filter(!is.na(duid.att.total) &
            ma.ingest) %>% 
   ggplot(aes(x = duid.inst.ever, y = duid.att.total)) +
@@ -275,5 +283,6 @@ miss.x <- select(dems.df, id, ma.ingest) %>% left_join(dd.df) %>%
 
 # Save Image --------------------------------------------------------------
 save.image(file = "objects/all-objects.RData") # Turn into a function or something you can call quickly
+
 
 

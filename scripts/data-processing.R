@@ -92,6 +92,9 @@ dems.df <- survey.screened %>%
 
 
 #### AUDIT ####
+alcohol.ids <- dems.df %>% 
+  filter(alcohol.ever) %>% pull(id)
+
 audit.df <- survey.screened %>% 
   transmute(
     id = id,
@@ -740,4 +743,6 @@ summ.df <- dems.df %>%
 
 
 save.image(file = "objects/all-objects.RData")
+
+
 

@@ -1,3 +1,9 @@
+# Tings -------------------------------------------------------------------
+
+
+
+
+
 alcohol.ids <- dems.df %>% 
   filter(alcohol.ever) %>% pull(id)
 
