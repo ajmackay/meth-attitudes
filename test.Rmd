@@ -27,7 +27,9 @@ This is _italics_
 # Group Comparison
 ## Demographics
 ```{r}
-dems.tbl
+library(DT)
+dems.tbl  %>% 
+  as.data.frame() %>% datatable()
 ```
 
 ---

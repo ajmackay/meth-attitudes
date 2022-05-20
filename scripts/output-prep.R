@@ -55,12 +55,9 @@ label(dems.df$alcohol.ever) <- "Ever Used Alcohol?"
 dems.df$ma.ingest
 
 #### sort out dems table ####
-dems.tbl
-
-table1(~ license.status + age + sex + education + employment.status +
+dems.tbl <- table1(~ license.status + age + sex + education + employment.status +
          area.live + alcohol.ever | ma.ingest, data = filter(dems.df, id %in% c(ma.id, n.ma.id)),
-       overall = FALSE, extra.col = list(`P-value` = pvalue)) %>% 
-  as.data.frame() %>% datatable()
+       overall = FALSE, extra.col = list(`P-value` = pvalue))
 
 
 
