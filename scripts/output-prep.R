@@ -1,5 +1,8 @@
-packages <- append(packages, c("stargazer", "flextable"))
+old.objects <- load("objects/all-objects.RData")
+packages <- append(packages, c("stargazer", "flextable", "xaringan", "DT"))
 librarian::shelf(packages)
+
+
 
 # Comparison Tables -------------------------------------------------------
 pvalue <- function(x, ...) {
@@ -49,20 +52,29 @@ dems.df$area.live <- factor(dems.df$area.live, levels = c(
 ))
 label(dems.df$area.live) <- "Home Location"
 label(dems.df$alcohol.ever) <- "Ever Used Alcohol?"
+dems.df$ma.ingest
+
+#### sort out dems table ####
+dems.tbl
 
 table1(~ license.status + age + sex + education + employment.status +
          area.live + alcohol.ever | ma.ingest, data = filter(dems.df, id %in% c(ma.id, n.ma.id)),
        overall = FALSE, extra.col = list(`P-value` = pvalue)) %>% 
-  t1flex() %>% 
-  save_as_docx(path = "output/dems-table.docx")
+  as.data.frame() %>% datatable()
 
 
 
 
+#### OPTIONAL - create separate file containing output objects
+if(FALSE){
+output.objects <- ls()[!ls() %in% old.objects & ls() != "old.objects"]
+output.objects
 
-tmp <- unlist(dems.df)
+save(tmp, file = "objects/output-objects.RData")
 
-length(tmp)
-rep(1:length(tmp), times = 3)
+}
 
-sapply(tmp, length)
+save.image("objects/all-objects.RData")
+
+
+

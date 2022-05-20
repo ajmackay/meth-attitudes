@@ -175,9 +175,9 @@ duid.att.dems.tbl <- table1::table1(~duid.att.total + age + sex + education + em
                  filter(!is.na(duid.att.total), dd.full)) %>% 
   t1kable()
 
-dems.tbl <- table1::table1(~age + sex + education + employment.status + ethnicity + alcohol.ever,
-                           data = filter(dems.df, ma.ingest)) %>% 
-  t1kable()
+# dems.tbl <- table1::table1(~age + sex + education + employment.status + ethnicity + alcohol.ever,
+#                            data = filter(dems.df, ma.ingest)) %>% 
+#   t1kable()
 
 
 #### Only full observations ####

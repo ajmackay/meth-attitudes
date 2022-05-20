@@ -11,7 +11,7 @@ output: xaringan::moon_reader
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-# Source the objects
+load("objects/all-objects.RData")
 ```
 # Looking at the data
 This is text
@@ -23,12 +23,12 @@ This is __bold.__
 
 This is _italics_
 
-## R Markdown
-
-This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
-
+---
+# Group Comparison
+## Demographics
+```{r}
+dems.tbl
+```
 
 ---
 ## Slide with Bullets
