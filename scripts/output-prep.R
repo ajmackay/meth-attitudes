@@ -26,7 +26,6 @@ pvalue <- function(x, ...) {
 label(dems.df$license.status) <- "License Status"
 label(dems.df$age) <- "Age"
 label(dems.df$sex) <- "Sex"
-label(dems.df$education) <- "Education"
 dems.df$education <- factor(dems.df$education, levels = c(
                               "Did not finish high school",
                             "High School Diploma",
@@ -35,6 +34,7 @@ dems.df$education <- factor(dems.df$education, levels = c(
                             "Bachelor Degree",
                             "Postgraduate Degree"
                             ))
+label(dems.df$education) <- "Education"
 dems.df$employment.status <- factor(dems.df$employment.status, levels = c(
 "Unemployed not looking for work",
 "Unemployed looking for work",
@@ -54,9 +54,27 @@ label(dems.df$area.live) <- "Home Location"
 label(dems.df$alcohol.ever) <- "Ever Used Alcohol?"
 dems.df$ma.ingest
 
-#### sort out dems table ####
 dems.tbl <- table1(~ license.status + age + sex + education + employment.status +
          area.live + alcohol.ever | ma.ingest, data = filter(dems.df, id %in% c(ma.id, n.ma.id)),
+       overall = FALSE, extra.col = list(`P-value` = pvalue))
+
+#### Assessments ####
+
+summ.prep <- summ.df %>% 
+  filter(id %in% c(ma.id, n.ma.id)) %>%
+  select(id, ma.ingest, k6.total, state.total, trait.total, dd.total, dui.att.total, dui.strat.total, duid.att.total)
+
+label(summ.prep$k6.total) <- "K6 Total Score"
+label(summ.prep$state.total) <- "STAXI State Score"
+label(summ.prep$trait.total) <- "STAXI Trait Score"
+label(summ.prep$dd.total) <- "Dangerous Driving Score (DDDI)"
+label(summ.prep$dui.att.total) <- "DUI Attitudes Score"
+label(summ.prep$dui.strat.total) <- "DUI Strategies Score"
+label(summ.prep$duid.att.total) <- "DUID Attitudes Score"
+
+
+ass.tbl <- table1(~ k6.total + state.total + trait.total + dd.total + dui.att.total + dui.strat.total + duid.att.total |
+         ma.ingest, data = summ.prep,
        overall = FALSE, extra.col = list(`P-value` = pvalue))
 
 

@@ -1,6 +1,6 @@
 ---
 title: "Methamphetmine Use and Driving Behaviour"
-subtitle: "Predictors of dangerous driving behaviour in Methamphetamine users"
+subtitle: "Predictors of dangerous driving behaviour in Methamphetamine users (a quick look at our sample)"
 author: "Aaron Mackay"
 institute: "Swinburne University Centre for Human Psychopharmacology"
 date: "Updated: `r Sys.Date()`"
@@ -9,11 +9,44 @@ output: xaringan::moon_reader
   
 ---
 
+```{css, echo = FALSE}
+tableContainer{
+  height: 300px;
+  overflow: hidden;
+}
+
+table{
+  font-size: 10px;
+  position: sticky;
+  top: 0;
+  width: 100%;
+}
+
+```
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 load("objects/all-objects.RData")
+
+packages <- c("tidyverse", "janitor", "table1", "gt", "naniar", "kableExtra", "DT")
+librarian::shelf(packages)
 ```
-# Looking at the data
+
+# Demographics
+```{r}
+dems.tbl %>% t1kable(format = "html") %>% scroll_box(height = "500px")
+```
+
+---
+# Assessments
+```{r}
+ass.tbl %>% t1kable(format = "html") %>% scroll_box(height = "500px")
+```
+
+---
+
+
+## Shit
 This is text
 
 ``` r
@@ -23,23 +56,6 @@ This is __bold.__
 
 This is _italics_
 
----
-# Group Comparison
-## Demographics
-```{r}
-library(DT)
-dems.tbl  %>% 
-  as.data.frame() %>% datatable()
-```
-
----
-## Slide with Bullets
-
--   Bullet 1
--   Bullet 2
--   Bullet 3
-
-## Slide with R Output
 
 ```{r cars, echo = TRUE}
 summary(cars)
