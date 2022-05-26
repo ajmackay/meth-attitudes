@@ -79,6 +79,20 @@ ass.tbl <- table1(~ k6.total + state.total + trait.total + dd.total + dui.att.to
 
 
 
+# Plots -------------------------------------------------------------------
+# Mean lines would be cool
+ass.plot <- summ.prep %>% 
+  pivot_longer(cols = -c(id, ma.ingest), names_to = "assessment") %>% 
+  group_by(ma.ingest) %>% 
+  # filter(assessment == "dd.total") %>% 
+  ggplot(aes(x = value, fill = ma.ingest)) + 
+  geom_density(alpha = 0.6) +
+  # geom_vline(aes(xintercept = mean(value))) +
+  facet_wrap(~assessment, scales = "free")
+
+
+
+
 
 #### OPTIONAL - create separate file containing output objects
 if(FALSE){

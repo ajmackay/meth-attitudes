@@ -28,8 +28,10 @@ table{
 knitr::opts_chunk$set(echo = FALSE)
 load("objects/all-objects.RData")
 
-packages <- c("tidyverse", "janitor", "table1", "gt", "naniar", "kableExtra", "DT")
+packages <- c("tidyverse", "janitor", "table1", "gt", "naniar", "kableExtra", "DT", "plotly")
 librarian::shelf(packages)
+
+theme_set(theme_light())
 ```
 
 # Demographics
@@ -44,6 +46,14 @@ ass.tbl %>% t1kable(format = "html") %>% scroll_box(height = "500px")
 ```
 
 ---
+# Assessments (cont.)
+```{r}
+suppressWarnings(
+ggplotly(ass.plot, width = 800, height = 500)
+)
+```
+
+# Next Steps
 
 
 ## Shit
