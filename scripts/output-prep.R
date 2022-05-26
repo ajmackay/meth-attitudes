@@ -62,9 +62,10 @@ dems.tbl <- table1(~ license.status + age + sex + education + employment.status 
 
 summ.prep <- summ.df %>% 
   filter(id %in% c(ma.id, n.ma.id)) %>%
-  select(id, ma.ingest, k6.total, state.total, trait.total, dd.total, dui.att.total, dui.strat.total, duid.att.total)
+  select(id, ma.ingest, k6.total, audit.total, state.total, trait.total, dd.total, dui.att.total, dui.strat.total, duid.att.total)
 
 label(summ.prep$k6.total) <- "K6 Total Score"
+label(summ.prep$audit.total) <- "AUDIT-C Score"
 label(summ.prep$state.total) <- "STAXI State Score"
 label(summ.prep$trait.total) <- "STAXI Trait Score"
 label(summ.prep$dd.total) <- "Dangerous Driving Score (DDDI)"
@@ -73,7 +74,7 @@ label(summ.prep$dui.strat.total) <- "DUI Strategies Score"
 label(summ.prep$duid.att.total) <- "DUID Attitudes Score"
 
 
-ass.tbl <- table1(~ k6.total + state.total + trait.total + dd.total + dui.att.total + dui.strat.total + duid.att.total |
+ass.tbl <- table1(~ k6.total + audit.total + state.total + trait.total + dd.total + dui.att.total + dui.strat.total + duid.att.total |
          ma.ingest, data = summ.prep,
        overall = FALSE, extra.col = list(`P-value` = pvalue))
 

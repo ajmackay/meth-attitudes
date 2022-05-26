@@ -53,26 +53,18 @@ ggplotly(ass.plot, width = 800, height = 500)
 )
 ```
 
+---
 # Next Steps
+1. Examine further the differences in attitudes toward drug driving (between Methamphetamine users and non-users)
+2. Stepwise Regression predicting Dangerous Driving Behaviour from demographic and personality factors
+  - What are the most important contributors of dangerous driving in Methamphetamine Users
+  
+Coming soon...
 
-
-## Shit
-This is text
-
-``` r
-code <- "test"
-```
-This is __bold.__
-
-This is _italics_
-
-
-```{r cars, echo = TRUE}
-summary(cars)
+```{r message=FALSE, warning=FALSE}
+ggplotly(dd.duid.att.p, height = 300)
 ```
 
-## Slide with Plot
 
-```{r pressure}
-plot(pressure)
-```
+
+
