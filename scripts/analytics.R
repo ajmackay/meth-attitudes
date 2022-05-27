@@ -13,6 +13,5 @@ dems.df %>%
             mean.age = mean(age, na.rm = TRUE))
 
 
-table1(~ )
 
 

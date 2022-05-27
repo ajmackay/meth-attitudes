@@ -81,6 +81,8 @@ ass.tbl <- table1(~ k6.total + audit.total + state.total + trait.total + dd.tota
 
 
 # Plots -------------------------------------------------------------------
+
+
 # Mean lines would be cool
 ass.plot <- summ.prep %>% 
   pivot_longer(cols = -c(id, ma.ingest), names_to = "assessment") %>% 
