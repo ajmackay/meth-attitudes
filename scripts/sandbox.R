@@ -1,3 +1,12 @@
+# Sussing out where qualtrics goes wrong ----------------------------------
+
+
+
+
+
+
+
+
 # Tings -------------------------------------------------------------------
 summ.df %>% select(id, ma.ingest, dems.full, audit.full, trait.full, dd.full, duid.att.full) %>% 
   filter(!ma.ingest) %>% 

@@ -42,12 +42,23 @@ if(!is_empty(to.move)){
 
 # Data Processing -------------------------------------------------------------------
 #### Screened ####
+# survey.screened <- survey.raw %>% 
+#   filter(status == "IP Address",
+#          q126.13 %in% c("Full license (current/valid)", "Full license (expired/revoked)"),
+#          !is.na(q19)) %>% # Age (forced entry) 
+#   mutate(ma.ingest = fct_recode(as_factor(q47)) %>% replace_na("No"),
+#          ma.ingest = ma.ingest == "Yes",
+#          ma.most.common = q48 == "Yes") %>% 
+#   filter(!ma.ingest | ma.ingest & ma.most.common)
+
+
 survey.screened <- survey.raw %>% 
   filter(status == "IP Address",
-         q126.13 %in% c("Full license (current/valid)", "Full license (expired/revoked)")) %>% 
-         ## Filter for ma use most common) %>% 
-  mutate(ma.ingest = fct_recode(as_factor(q47)) %>% replace_na("No"),
+         q126.13 %in% c("Full license (current/valid)", "Full license (expired/revoked)"),
+         !is.na(q19)) %>% # Age (forced entry) 
+  mutate(ma.ingest = fct_recode(as_factor(q47)),
          ma.ingest = ma.ingest == "Yes",
+         ma.ingest = replace_na(ma.ingest, FALSE),
          ma.most.common = q48 == "Yes") %>% 
   filter(!ma.ingest | ma.ingest & ma.most.common)
 
@@ -123,7 +134,8 @@ audit.df <- survey.screened %>%
     audit.total = audit.freq + audit.typical + audit.six,
     audit.risky = ifelse((q13 == "Male" & audit.total > 2 | 
                             q13 == "Female" & audit.total > 1), "TRUE", "FALSE"),
-    audit.full = !(id %in% alcohol.ids & is.na(audit.total)))
+    audit.full = !(id %in% alcohol.ids & is.na(audit.total)),
+    audit.total = if_else(audit.full & is.na(audit.total), 0, audit.total))
 
 #### Drug Use ####
 druguse.df <- survey.screened %>% 

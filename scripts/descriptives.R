@@ -13,6 +13,21 @@ theme_set(theme_light())
 
 
 # Final Particpants -------------------------------------------------------
+#### Visualising Missing ####
+# Non-drug group
+summ.df %>% 
+  filter(!ma.ingest) %>% 
+  select(!ends_with("full")) %>% vis_miss()
+
+summ.df %>% 
+  filter(ma.ingest) %>% 
+  select(!ends_with("full")) %>% vis_miss()
+
+summ.df %>% 
+  filter(ma.ingest) %>% 
+  select(!ends_with("full")) %>% miss_case_
+
+
 n.ma.id <- summ.df %>% 
   filter(!ma.ingest,
          dems.full,
@@ -20,31 +35,31 @@ n.ma.id <- summ.df %>%
          # sds.full,
          trait.full,
          dd.full,
-         # dui.strat.full,
+         dui.strat.full,
          # duid.strat.full,
-         # dui.att.full,
-         duid.att.full
+         dui.att.full,
+         # duid.att.full
   ) %>% pull(id)
 
-summ.df %>% 
-  filter(!ma.ingest,
-         dems.full,
-         audit.full,
-         trait.full,
-         dd.full,
-         duid.att.full)
+# summ.df %>% 
+#   filter(!ma.ingest,
+#          dems.full,
+#          audit.full,
+#          trait.full,
+#          dd.full,
+#          duid.att.full)
 
 ma.id <- summ.df %>% 
   filter(ma.ingest,
          dems.full,
          audit.full,
-         # sds.full,
+         sds.full,
          trait.full,
          dd.full,
-         # dui.strat.full,
-         # duid.strat.full,
-         # dui.att.full,
-         duid.att.full
+         dui.strat.full,
+         duid.strat.full,
+         dui.att.full,
+         # duid.att.full
   ) %>% pull(id)
 
 
@@ -84,9 +99,9 @@ screen.plot <- screen.sum.df %>%
 
 
 #### Breakdown ####
-left_join(dems.df, dd.df) %>% 
-  group_by(ma.ingest) %>% 
-  count(dd.full)
+# left_join(dems.df, dd.df) %>% 
+#   group_by(ma.ingest) %>% 
+#   count(dd.full)
 
 
 
