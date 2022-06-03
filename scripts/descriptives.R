@@ -15,18 +15,16 @@ theme_set(theme_light())
 # Final Particpants -------------------------------------------------------
 #### Visualising Missing ####
 # Non-drug group
+if(FALSE){
 summ.df %>% 
   filter(!ma.ingest) %>% 
   select(!ends_with("full")) %>% vis_miss()
 
+# Ma group
 summ.df %>% 
   filter(ma.ingest) %>% 
   select(!ends_with("full")) %>% vis_miss()
-
-summ.df %>% 
-  filter(ma.ingest) %>% 
-  select(!ends_with("full")) %>% miss_case_
-
+}
 
 n.ma.id <- summ.df %>% 
   filter(!ma.ingest,
@@ -41,14 +39,6 @@ n.ma.id <- summ.df %>%
          # duid.att.full
   ) %>% pull(id)
 
-# summ.df %>% 
-#   filter(!ma.ingest,
-#          dems.full,
-#          audit.full,
-#          trait.full,
-#          dd.full,
-#          duid.att.full)
-
 ma.id <- summ.df %>% 
   filter(ma.ingest,
          dems.full,
@@ -62,6 +52,10 @@ ma.id <- summ.df %>%
          # duid.att.full
   ) %>% pull(id)
 
+# Includes full (relevant) responses
+dat <- summ.df %>% 
+  filter(id %in% c(ma.id, n.ma.id)) %>% 
+  select(-c(ends_with("full")))
 
 # Response Numbers --------------------------------------------------------
 

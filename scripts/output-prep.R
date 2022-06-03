@@ -22,6 +22,8 @@ pvalue <- function(x, ...) {
 }
 
 
+
+
 #### Demographics ####
 label(dems.df$license.status) <- "License Status"
 label(dems.df$age) <- "Age"
@@ -62,7 +64,7 @@ dems.tbl <- table1(~ license.status + age + sex + education + employment.status 
 
 summ.prep <- summ.df %>% 
   filter(id %in% c(ma.id, n.ma.id)) %>%
-  select(id, ma.ingest, k6.total, audit.total, state.total, trait.total, dd.total, dui.att.total, dui.strat.total, duid.att.total, duid.strat.total)
+  select(id, ma.ingest, k6.total, sds.total, audit.total, state.total, trait.total, dd.total, dui.att.total, dui.strat.total, duid.att.total, duid.strat.total)
 
 label(summ.prep$k6.total) <- "K6 Total Score"
 label(summ.prep$audit.total) <- "AUDIT-C Score"

@@ -1,7 +1,8 @@
 # Sussing out where qualtrics goes wrong ----------------------------------
 
+x.id <- summ.df %>% filter(is.na(age)) %>% pull(id)
 
-
+survey.screened %>% filter(id %in% x.id) %>% view
 
 
 
