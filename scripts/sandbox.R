@@ -1,3 +1,11 @@
+library(tidyverse)
+filez <- list.files("data/archive", full.names = TRUE)
+
+x <- map(filez, read_csv)
+x.df <- map_dfr(filez, read_csv)
+x[[1]]
+
+
 # Sussing out where qualtrics goes wrong ----------------------------------
 
 x.id <- summ.df %>% filter(is.na(age)) %>% pull(id)

@@ -9,6 +9,7 @@ ma.names <- c(
    `TRUE` = "MA Users"
 )
 
+## GGplot theme set
 theme_set(theme_light())
 
 
@@ -44,11 +45,12 @@ ma.id <- summ.df %>%
          dems.full,
          audit.full,
          sds.full,
+         k6.full,
          trait.full,
          dd.full,
-         dui.strat.full,
-         duid.strat.full,
-         dui.att.full,
+         # dui.strat.full,
+         # duid.strat.full,
+         # dui.att.full,
          # duid.att.full
   ) %>% pull(id)
 
@@ -60,6 +62,7 @@ dat <- summ.df %>%
 # Response Numbers --------------------------------------------------------
 
 #### Screening ####
+# OLD
 screen.sum.df <- tibble(
   total.n = nrow(survey.raw),
   total.not.spam = filter(survey.raw, status != "Spam", status != "Survey Preview") %>% nrow(),
@@ -105,15 +108,15 @@ summ.df %>%
     filter(ma.ingest,
            dems.full,
            audit.full,
-           # sds.full,
+           sds.full,
            trait.full,
            dd.full,
-           # dui.strat.full,
-           # duid.strat.full,
-           # dui.att.full,
-           duid.att.full
-           ) %>% 
-    count(license.status)
+           dui.strat.full,
+           duid.strat.full,
+           dui.att.full,
+           k6.full
+           # duid.att.full
+           )
   
 summ.df %>% 
   filter(!ma.ingest,

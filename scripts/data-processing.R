@@ -36,7 +36,7 @@ if(!is_empty(to.move)){
   saveRDS(survey.raw, file = "objects/survey-raw.RData")
   
 }else survey.raw <- readRDS("objects/survey-raw.RData")
-  
+
 
 
 
@@ -97,7 +97,7 @@ dems.df <- survey.screened %>%
             area.live = q21,
             license.status = as_factor(q22),
             alcohol.ever = as_factor(q28) == "Yes", # Convert to logical
-            dems.full = if_else(is.na(age) | is.na(sex) | is.na(ethnicity) | is.na(education) | is.na(area.live), FALSE, TRUE)
+            dems.full = if_else(is.na(age) | is.na(sex) | is.na(education) | is.na(area.live), FALSE, TRUE) # Removed Ethnicity as it's vague
             )
 
 

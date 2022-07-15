@@ -54,7 +54,7 @@ dems.df$area.live <- factor(dems.df$area.live, levels = c(
 ))
 label(dems.df$area.live) <- "Home Location"
 label(dems.df$alcohol.ever) <- "Ever Used Alcohol?"
-dems.df$ma.ingest
+
 
 dems.tbl <- table1(~ license.status + age + sex + education + employment.status +
          area.live + alcohol.ever | ma.ingest, data = filter(dems.df, id %in% c(ma.id, n.ma.id)),
