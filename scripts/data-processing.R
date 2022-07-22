@@ -754,6 +754,36 @@ summ.df <- dems.df %>%
   left_join(select(duid.strat.df, id, duid.strat.total, duid.strat.full))
 
 
+# Final Data for Analyses -------------------------------------------------
+#### MA group ####
+
+ma.id <- summ.df %>% 
+  filter(ma.ingest,
+         dems.full,
+         audit.full,
+         sds.full,
+         k6.full,
+         trait.full,
+         dd.full,
+         # dui.strat.full,
+         # duid.strat.full,
+         # dui.att.full,
+         # duid.att.full
+  ) %>% pull(id)
+
+ma.final <- summ.df %>% 
+  filter(id %in% ma.id) %>% 
+  select(id, age, sex, education, area.live,
+         audit.total, sds.total, k6.total, trait.total, dd.total)
+
+ma.final <- ma.final %>% 
+  mutate(education = fct_collapse(education,
+                                  "University Degree" = c("Bachelor Degree", "Postgraduate Degree"),
+                                  "Highschool/Technical Degree" = c("Vocational/Technical degree or certificate",
+                                                                    "High School Diploma")),
+         area.live = fct_collapse(area.live,
+                                  "Rural/Suburban" = c("Rural", "Suburban")))
+
 save.image(file = "objects/all-objects.RData")
 
 

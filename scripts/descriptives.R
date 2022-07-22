@@ -116,7 +116,8 @@ summ.df %>%
            dui.att.full,
            k6.full
            # duid.att.full
-           )
+           ) %>% 
+    count()
   
 summ.df %>% 
   filter(!ma.ingest,
