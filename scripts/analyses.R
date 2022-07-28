@@ -2,6 +2,8 @@ packages <- append(packages, c("GGally", "mctest", "leaps"))
 librarian::shelf(packages)
 
 
+load("objects/all-objects.RData")
+
 # Univariate Statistics ---------------------------------------------------
 uni.summ <- ma.final %>% 
   select(age, audit.total:dd.total) %>% 
@@ -37,6 +39,7 @@ imcdiag(model)
 
 
 # Regression Analysis -----------------------------------------------------
+# All Subsets Regression
 models <- regsubsets(dd.total ~ ., nvmax = 10, data = select(ma.final, -id))
 
 models.summ <- summary(models)
@@ -47,11 +50,15 @@ tibble(
   BIC = which.min(models.summ$bic)
 )
 
+m1 <- lm(dd.total ~ ., data = select(ma.final, trait.total, dd.total))
+m2 <- lm(dd.total ~ ., data = select(ma.final, trait.total, sds.total, dd.total))
 m3 <- lm(dd.total ~ ., data = select(ma.final, audit.total, sds.total, trait.total, dd.total))
 m4 <- lm(dd.total ~ ., data = select(ma.final, education, audit.total, sds.total, trait.total, dd.total))
 m5 <- lm(dd.total ~ ., data = select(ma.final, dd.total, education, audit.total, sds.total, trait.total, k6.total))
 m6 <- lm(dd.total ~., data = select(ma.final, dd.total, education, audit.total, sds.total, trait.total, k6.total, area.live))
 
+m1.summ <- summary(m1)
+m2.summ <- summary(m2)
 m3.summ <- summary(m3)
 m4.summ <- summary(m4)
 m5.summ <- summary(m5)
@@ -59,10 +66,10 @@ m6.summ <- summary(m6)
 
 
 tibble(
-  model = c(3, 4, 5, 6),
-  AIC = AIC(m3, m4, m5, m6)$AIC,
-  BIC = BIC(m3, m4, m5, m6)$BIC,
-  AdjR2 = c(m3.summ$adj.r.squared, m4.summ$adj.r.squared, m5.summ$adj.r.squared, m6.summ$adj.r.squared)
+  model = c(1, 2, 3, 4, 5, 6),
+  AIC = AIC(m1, m2, m3, m4, m5, m6)$AIC,
+  BIC = BIC(m1, m2, m3, m4, m5, m6)$BIC,
+  AdjR2 = c(m1.summ$adj.r.squared, m2.summ$adj.r.squared, m3.summ$adj.r.squared, m4.summ$adj.r.squared, m5.summ$adj.r.squared, m6.summ$adj.r.squared)
 )
 
 # I guess it's better to go with less predictors to avoid over-fitting? Is that how it works?
