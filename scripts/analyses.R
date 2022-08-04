@@ -1,4 +1,4 @@
-packages <- append(packages, c("GGally", "mctest", "leaps"))
+packages <- append(packages, c("GGally", "mctest", "leaps", "parameters"))
 librarian::shelf(packages)
 
 
@@ -40,7 +40,7 @@ imcdiag(model)
 
 # Regression Analysis -----------------------------------------------------
 # All Subsets Regression
-models <- regsubsets(dd.total ~ ., nvmax = 10, data = select(ma.final, -id))
+models <- regsubsets(dd.total ~ ., nvmax = 10, data = select(ma.final, -id), nbest = 1)
 
 models.summ <- summary(models)
 
@@ -56,6 +56,8 @@ m3 <- lm(dd.total ~ ., data = select(ma.final, audit.total, sds.total, trait.tot
 m4 <- lm(dd.total ~ ., data = select(ma.final, education, audit.total, sds.total, trait.total, dd.total))
 m5 <- lm(dd.total ~ ., data = select(ma.final, dd.total, education, audit.total, sds.total, trait.total, k6.total))
 m6 <- lm(dd.total ~., data = select(ma.final, dd.total, education, audit.total, sds.total, trait.total, k6.total, area.live))
+m7 <- lm(dd.total ~., data = select(ma.final, dd.total, education, audit.total, sds.total, trait.total, k6.total, area.live, sex))
+m8 <- lm(dd.total ~., select(ma.final, dd.total, education, audit.total, sds.total, trait.total, k6.total, area.live, sex, age))
 
 m1.summ <- summary(m1)
 m2.summ <- summary(m2)
@@ -63,15 +65,26 @@ m3.summ <- summary(m3)
 m4.summ <- summary(m4)
 m5.summ <- summary(m5)
 m6.summ <- summary(m6)
+m7.summ <- summary(m7)
+m8.summ <- summary(m8)
 
 
 tibble(
-  model = c(1, 2, 3, 4, 5, 6),
-  AIC = AIC(m1, m2, m3, m4, m5, m6)$AIC,
-  BIC = BIC(m1, m2, m3, m4, m5, m6)$BIC,
-  AdjR2 = c(m1.summ$adj.r.squared, m2.summ$adj.r.squared, m3.summ$adj.r.squared, m4.summ$adj.r.squared, m5.summ$adj.r.squared, m6.summ$adj.r.squared)
-)
+  model = c(1, 2, 3, 4, 5, 6, 7, 8),
+  AIC = AIC(m1, m2, m3, m4, m5, m6, m7, m8)$AIC,
+  BIC = BIC(m1, m2, m3, m4, m5, m6, m7, m8)$BIC,
+  AdjR2 = c(m1.summ$adj.r.squared, m2.summ$adj.r.squared, m3.summ$adj.r.squared, m4.summ$adj.r.squared, m5.summ$adj.r.squared, m6.summ$adj.r.squared,
+            m7.summ$adj.r.squared, m8.summ$adj.r.squared)
+) %>% 
+  pivot_longer(cols = c(AIC, BIC, AdjR2), names_to = "Test") %>% 
+  ggplot(aes(x = model, y = value)) +
+  geom_point(size = 2) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1, 8, 1)) +
+  # stat_summary()
+  facet_wrap(~Test, scales = "free", nrow = 3)
 
 # I guess it's better to go with less predictors to avoid over-fitting? Is that how it works?
 
+confint(m3)
 
