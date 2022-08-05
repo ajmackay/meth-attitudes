@@ -1,5 +1,5 @@
 old.objects <- load("objects/all-objects.RData")
-packages <- append(packages, c("stargazer", "flextable", "xaringan", "DT"))
+packages <- append(packages, c("stargazer", "flextable", "xaringan", "DT", "patchwork"))
 librarian::shelf(packages)
 
 
@@ -60,6 +60,40 @@ dems.tbl <- table1(~ license.status + age + sex + education + employment.status 
          area.live + alcohol.ever | ma.ingest, data = filter(dems.df, id %in% c(ma.id, n.ma.id)),
        overall = FALSE, extra.col = list(`P-value` = pvalue))
 
+#### Ma Final Characteristics ####
+table1(~ age + sex + education + area.live + audit.total + sds.total + dependent + k6.total + trait.total + dd.total, data = ma.final)
+
+#### MA dems table ####
+table1(~ ma.use.peak + ma.use.age, data = ma.dems)
+
+#### MA Final distribution ####
+# Demographics
+p1 <- ma.dems %>% 
+  ggplot(aes(x = age)) +
+  geom_histogram(binwidth = 1, col = "black") +
+  labs(title = "Age", x = "", y = "")
+
+# Use proportion
+p2 <- ma.dems %>% 
+  ggplot(aes(x = sex)) +
+  geom_bar(col = "black") +
+  labs(title = "Sex", x = "") +
+  coord_flip()
+
+p3 <- ma.dems %>% 
+  ggplot(aes(x = education)) +
+  geom_bar(col = "black") +
+  labs(title = "Education", x= "") +
+  coord_flip()
+
+p4 <- ma.dems %>% 
+  ggplot(aes(x = area.live)) +
+  geom_bar(col = "black") +
+  labs(title = "Residential Area", x = "") +
+  coord_flip()
+
+(p1 + p2) / (p3 + p4)
+
 #### Assessments ####
 
 summ.prep <- summ.df %>% 
@@ -102,7 +136,7 @@ ass.plot <- summ.prep %>%
 
 
 
-#### OPTIONAL - create separate file containing output objects
+n#### OPTIONAL - create separate file containing output objects
 if(FALSE){
 output.objects <- ls()[!ls() %in% old.objects & ls() != "old.objects"]
 output.objects
