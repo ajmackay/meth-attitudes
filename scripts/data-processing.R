@@ -744,7 +744,7 @@ duid.strat.dich.df <- duid.strat.df %>%
 # Key dems and totals of assessments
 summ.df <- dems.df %>% 
   left_join(select(audit.df, id, audit.total, audit.risky, audit.full)) %>% 
-  left_join(select(ma.df, id, sds.total, sds.full, ma.type)) %>% 
+  left_join(select(ma.df, id, sds.total, sds.full, ma.type, ma.use.age)) %>% 
   left_join(select(k6.df, id, k6.total, k6.full)) %>% 
   left_join(select(staxi.df, id, state.total, state.full, trait.total, trait.full)) %>% 
   left_join(select(dd.df, id, dd.total, dd.full)) %>% 

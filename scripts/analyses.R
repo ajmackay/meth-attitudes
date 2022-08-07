@@ -1,4 +1,4 @@
-packages <- append(packages, c("GGally", "mctest", "leaps", "parameters"))
+packages <- append(packages, c("GGally", "mctest", "leaps"))
 librarian::shelf(packages)
 
 

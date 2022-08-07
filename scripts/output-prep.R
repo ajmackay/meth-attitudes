@@ -1,6 +1,183 @@
 old.objects <- load("objects/all-objects.RData")
-packages <- append(packages, c("stargazer", "flextable", "xaringan", "DT"))
+packages <- append(packages, c("stargazer", "flextable", "xaringan", "DT", "ggthemes"))
 librarian::shelf(packages)
+
+
+
+
+# Demographic charts ------------------------------------------------------
+#### Setup ####
+blank <- element_blank()
+plot.theme <- theme_classic() +
+  theme(
+    title = element_text(size = 12)
+    # axis.text.x = element_text()
+    # legend.title = element_text("none")
+  )
+
+theme.blank <- theme(
+  axis.text.x = blank,
+  axis.text.y = blank,
+  axis.line = blank,
+  axis.ticks = blank
+)
+
+theme.hist <-
+  theme(
+    axis.line = blank,
+    axis.text.y = blank,
+    axis.ticks.y = blank
+  )
+
+swin.red <- "#E4051F"
+
+# sds, peak use,
+p.age <- ma.final %>% 
+  ggplot(aes(x = age)) +
+  plot.theme +
+  geom_histogram(binwidth = 1, col = "black", fill = "#2b8cbe") +
+  geom_vline(data = summarise(ma.final, mean.age = mean(age)),
+             aes(xintercept = mean.age), col = swin.red, linetype = "dashed", size = 1) +
+  # geom_text(label = "Mean: 30.8", x = 28.5, y = 8) +
+  labs(x = "",
+       y = "",
+       title = "Age") +
+  scale_y_continuous(expand = expansion(0.01)) +
+  theme(
+    axis.line = blank,
+    axis.text.y = blank,
+    axis.ticks.y = blank
+  )
+  
+ggsave(p.age, filename = "output/plots/01_age.png", width = 12, height = 9, units = "cm")
+
+hsize <- 4
+fill.donut <- c("#ece7f2", "#2b8cbe")
+
+p.area <- ma.final %>% 
+  count(area.live) %>% 
+  mutate(p = n/sum(n) * 100) %>% 
+  ggplot(aes(x = hsize, y = p, fill = area.live)) +
+  plot.theme +
+  theme.blank +
+  theme(
+    legend.position = "none"
+  ) +
+  scale_fill_manual(values = c("#fee8c8", "#e34a33")) +
+  # scale_fill_brewer() +
+  geom_col() +
+  # geom_text(aes(label = str_c(round(p, 0), "%")),
+  #           position = position_stack(vjust = 0.5),
+  #           col = c("black")) +
+  coord_polar(theta = "y") +
+  xlim(c(2, hsize + 0.5)) +
+  labs(x = blank,
+       y = blank,
+       fill = blank,
+       title = "Residential Area")
+
+ggsave(p.area, filename = "output/plots/02_area-live_donut.png", width = 9, height = 9, units = "cm")
+  
+p.sex <- ma.final %>% 
+  count(sex) %>% 
+  mutate(p = round(n / sum(n) * 100)) %>% 
+  ggplot(aes(x = hsize, y = p, fill = sex)) +
+  plot.theme +
+  theme.blank +
+  theme(
+    legend.position = "none"
+  ) +
+  scale_fill_manual(values = fill.donut) +
+  geom_col() + 
+  coord_polar(theta = "y") +
+  xlim(c(2, hsize + 0.5)) +
+  # geom_text(aes(label = str_c(p, "%")),
+  #           position = position_stack(vjust = 0.5),
+  #           col = "white") +
+  labs(x = blank, y = blank, fill = blank,
+       title = "Sex")
+
+ggsave(p.sex, filename = "output/plots/01_sex-donut.png", width = 9, height = 9, units = "cm")
+  
+# SDS (highlight those with MUD)
+p.sds.hist <- ma.final %>% 
+  left_join(select(summ.df, id, ma.type)) %>% 
+  ggplot(aes(x = sds.total, fill = ma.type)) +
+  plot.theme +
+  theme(
+    legend.position = "none",
+    axis.text.y = blank,
+    axis.line.y = blank,
+    axis.ticks.y = blank,
+    axis.line.x = blank
+  ) +
+  scale_y_continuous(expand = expansion(0.01)) +
+  scale_fill_manual(values = c("#d7191c", "#2c7bb6"))+
+  geom_histogram(binwidth = 1, col = "black") +
+  labs(x = blank, y = blank, fill = blank,
+       title = "Severity of Depdendence")
+
+
+ggsave(p.sds.hist, filename = "output/plots/01_sds-hist.png", width = 12, height = 9, units = "cm")
+
+#### Age of use ####
+p.age.use <- ma.final %>% 
+  left_join(select(summ.df, id, ma.use.age)) %>% 
+  mutate(use.age.bracket = case_when(
+    between(ma.use.age, 15, 20) ~ "15-20",
+    between(ma.use.age, 21, 30) ~ "21-30",
+    between(ma.use.age, 31, 39) ~ "31-39",
+    ma.use.age >= 40 ~ "40+"
+  )) %>% 
+  count(use.age.bracket) %>% arrange(desc(n)) %>% 
+  mutate(p = round(n/sum(n) * 100, 0)) %>% 
+  ggplot(aes(x = hsize, y = p, fill = use.age.bracket)) +
+  
+  plot.theme +
+  theme.hist +
+  theme(
+    axis.text = blank
+  ) +
+  
+  geom_col() +
+  coord_polar(theta = "y") +
+  xlim(c(2, hsize + 0.5)) +
+  
+  geom_text(aes(label = str_c(p, "%")),
+            position = position_stack(vjust = 0.5),
+            col = "white") +
+  
+  scale_fill_brewer(palette = "Set1") +
+  
+  labs(x = blank, y = blank, fill = blank)
+
+ggsave(p.age.use, filename = "output/plots/01_age-use_donut.png", height = 11, width = 11, units = "cm")
+
+# geom_text(aes(label = str_c(round(p, 0), "%")),
+#           position = position_stack(vjust = 0.5),
+#           col = c("black")) +
+  
+  ggplot(aes(x = use.age.bracket)) +
+
+  geom_bar()
+
+# k6, STAXI, DDDI
+
+
+#### k6 ####
+p.k6 <- ma.final %>% 
+  ggplot(aes(x = k6.total)) +
+  plot.theme +
+  theme.hist +
+  geom_histogram(binwidth = 1, col = "black", fill = "#4575b4") +
+  geom_vline(data = summarise(ma.final, mean = mean(k6.total)), 
+             aes(xintercept = mean),
+             linetype = "dashed",
+             size = 1,
+             col = swin.red) +
+  scale_y_continuous(expand = expansion(0.01)) +
+  labs(x = blank, y = blank,
+       title = "Kessler Psychological Distress Scale")
 
 
 
