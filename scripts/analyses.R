@@ -86,5 +86,7 @@ tibble(
 
 # I guess it's better to go with less predictors to avoid over-fitting? Is that how it works?
 
+#### Explorint m3 ####
 confint(m3)
 
+ppcor::spcor(dplyr::select(ma.final, audit.total, sds.total, trait.total, dd.total))

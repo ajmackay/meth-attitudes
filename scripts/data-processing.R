@@ -84,17 +84,25 @@ dems.df <- survey.screened %>%
                                    "African" = "Sub-Saharan African (e.g. Botswana,Cameroon, Central African Republic, Congo, Ethiopia, Ghana, Guinea, Kenya, Liberia, Namibia, Nigeria)"
             ),
             marital.status = as_factor(q15),
-            education = fct_recode(as_factor(q20),
-                                   "Did not finish high school" = "Attended high school but did not finish",
-                                   "High School Diploma" = "High School Diploma",
-                                   "Vocational/Technical degree or certificate" = "Vocational/Technical degree or certificate",
+            education = fct_collapse(as_factor(q20),
+                                   "University Degree" = c("Bachelor Degree", "Master’s Degree", "Postgraduate Degree"),
+                                   "Highschool/Technical Degree" = c("High School Diploma", "Vocational/Technical degree or certificate"),
                                    "Did not finish University" = "Attended University but did not finish",
-                                   "Bachelor Degree" = "Bachelor Degree",
-                                   "Postgraduate Degree" = "Master’s Degree",
-                                   "Postgraduate Degree" = "Postgraduate Degree"
+                                   "Did not finish High School" = "Attended high school but did not finish"
+                                   # "High School Diploma" = "High School Diploma",
+                                   # "Vocational/Technical degree or certificate" = "Vocational/Technical degree or certificate",
+                                   
+                                  
+                                   # "Bachelor Degree" = "Bachelor Degree",
+                                   # "Postgraduate Degree" = "Master’s Degree",
+                                   # "Postgraduate Degree" = "Postgraduate Degree",
+                                   
             ),
             employment.status = as_factor(q17),
-            area.live = q21,
+            area.live = fct_collapse(as_factor(q21),
+                                     "Rural/Suburban" = c("Rural", "Suburban"),
+                                     "Urban/Inner-City" = "Urban/Inner-city"
+            ),
             license.status = as_factor(q22),
             alcohol.ever = as_factor(q28) == "Yes", # Convert to logical
             dems.full = if_else(is.na(age) | is.na(sex) | is.na(education) | is.na(area.live), FALSE, TRUE) # Removed Ethnicity as it's vague
@@ -776,13 +784,22 @@ ma.final <- summ.df %>%
   select(id, age, sex, education, area.live,
          audit.total, sds.total, k6.total, trait.total, dd.total)
 
-ma.final <- ma.final %>% 
-  mutate(education = fct_collapse(education,
-                                  "University Degree" = c("Bachelor Degree", "Postgraduate Degree"),
-                                  "Highschool/Technical Degree" = c("Vocational/Technical degree or certificate",
-                                                                    "High School Diploma")),
-         area.live = fct_collapse(area.live,
-                                  "Rural/Suburban" = c("Rural", "Suburban")))
+# ma.final <- ma.final %>% 
+#   mutate(education = fct_collapse(education,
+#                                   "University Degree" = c("Bachelor Degree", "Postgraduate Degree"),
+#                                   "Highschool/Technical Degree" = c("Vocational/Technical degree or certificate",
+#                                                                     "High School Diploma")),
+#          area.live = fct_collapse(area.live,
+#                                   "Rural/Suburban" = c("Rural", "Suburban")))
+
+ma.dems <- ma.df %>% 
+  filter(id %in% ma.id) %>% 
+  left_join(dems.df) %>% 
+  select(id, age, sex, education, area.live,
+         ma.use.peak, ma.use.age, sds.total, dependent = ma.type) %>% 
+  mutate(dependent = dependent == "MUD")
+
+
 
 save.image(file = "objects/all-objects.RData")
 
