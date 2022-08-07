@@ -101,7 +101,7 @@ p.sex <- ma.final %>%
 
 ggsave(p.sex, filename = "output/plots/01_sex-donut.png", width = 9, height = 9, units = "cm")
   
-# SDS (highlight those with MUD)
+#### SDS (highlight those with MUD) ####
 p.sds.hist <- ma.final %>% 
   left_join(select(summ.df, id, ma.type)) %>% 
   ggplot(aes(x = sds.total, fill = ma.type)) +
@@ -159,9 +159,7 @@ ggsave(p.age.use, filename = "output/plots/01_age-use_donut.png", height = 11, w
 #           position = position_stack(vjust = 0.5),
 #           col = c("black")) +
   
-  ggplot(aes(x = use.age.bracket)) +
 
-  geom_bar()
 
 # k6, STAXI, DDDI
 
@@ -180,6 +178,46 @@ p.k6 <- ma.final %>%
   scale_y_continuous(expand = expansion(0.01)) +
   labs(x = blank, y = blank,
        title = "Kessler Psychological Distress Scale")
+
+
+
+#### Peak Use ####
+p.use <- ma.final %>% 
+  left_join(select(ma.df, id, ma.use.peak)) %>% 
+  mutate(ma.use.peak = factor(ma.use.peak, levels = c("1 to 2 times per month", "Weekly", "Daily"))) %>% 
+  count(ma.use.peak) %>% 
+  mutate(p = n/sum(n)) %>% 
+
+  ggplot(aes(x = 4, y = p, fill = ma.use.peak)) +
+  plot.theme +
+  theme(
+    axis.line = blank,
+    axis.text.y = blank,
+    axis.ticks.y = blank
+  ) +
+  geom_col(position = position_stack()) +
+  coord_flip()+
+  geom_text(aes(label = str_c(round(p * 100, 0), "%")),
+            position = position_stack(vjust = 0.5),
+            col = "white") +
+
+  scale_fill_manual(values = c("#74a9cf", "#2b8cbe", "#045a8d")) +
+  scale_y_continuous(labels = scales::percent) +
+  
+  labs(x = blank, y = blank, fill = blank)
+
+ggsave(p.use, filename = "output/plots/01_peak-use_bar.png", height = 4, width = 15, units = "cm")
+
+
+
+#### STAXI ####
+ma.final %>% 
+  left_join(select(staxi.df, id, state.total)) %>% 
+  pivot_longer(cols = c(trait.total, state.total), names_to = "group") %>% 
+  ggplot(aes(x = value, fill = group)) +
+  plot.theme +
+  
+  geom_histogram(binwidth = 2, col = "black", alpha = 0.5)
 
 
 
