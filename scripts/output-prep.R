@@ -1,4 +1,4 @@
-old.objects <- load("objects/all-objects.RData")
+load("objects/all-objects.RData")
 
 packages <- append(packages, c("stargazer", "flextable", "xaringan", "DT", "patchwork"))
 
@@ -32,6 +32,10 @@ theme.hist <-
   )
 
 swin.red <- "#E4051F"
+.red <- "#d7191c"
+.blue <- "#2c7bb6"
+
+hsize <- 4
 
 # sds, peak use,
 p.age <- ma.final %>% 
@@ -53,7 +57,7 @@ p.age <- ma.final %>%
   
 ggsave(p.age, filename = "output/plots/01_age.png", width = 12, height = 9, units = "cm")
 
-hsize <- 4
+
 fill.donut <- c("#ece7f2", "#2b8cbe")
 
 p.area <- ma.final %>% 
@@ -101,7 +105,7 @@ p.sex <- ma.final %>%
 
 ggsave(p.sex, filename = "output/plots/01_sex-donut.png", width = 9, height = 9, units = "cm")
   
-#### SDS (highlight those with MUD) ####
+#### SDS ####
 p.sds.hist <- ma.final %>% 
   left_join(select(summ.df, id, ma.type)) %>% 
   ggplot(aes(x = sds.total, fill = ma.type)) +
@@ -211,14 +215,66 @@ ggsave(p.use, filename = "output/plots/01_peak-use_bar.png", height = 4, width =
 
 
 #### STAXI ####
-ma.final %>% 
-  left_join(select(staxi.df, id, state.total)) %>% 
-  pivot_longer(cols = c(trait.total, state.total), names_to = "group") %>% 
-  ggplot(aes(x = value, fill = group)) +
+p.staxi <- ma.final %>% 
+  # left_join(select(staxi.df, id, state.total)) %>% 
+  # pivot_longer(cols = c(trait.total, state.total), names_to = "group") %>% 
+  ggplot(aes(x = trait.total)) +
   plot.theme +
+  theme(
+    axis.line = blank,
+    axis.text.y = blank,
+    axis.ticks.y = blank,
+  ) + 
   
-  geom_histogram(binwidth = 2, col = "black", alpha = 0.5)
+  geom_histogram(binwidth = 1, col = "black", fill = .blue, position = "identity") +
+  geom_vline(data = summarise(ma.final, mean = mean(trait.total)), aes(xintercept = mean),
+             linetype = "dashed", size = 1, col = .red) +
+  scale_y_continuous(expand = expansion(0.01)) +
+  labs(x = blank, y = blank)
+  
+ggsave(p.staxi, filename = "output/plots/01_staxi_hist.png", height = 9, width = 12, units = "cm")
 
+#### DDDI ####
+p.dd <- ma.final %>% 
+  ggplot(aes(x = dd.total)) +
+  plot.theme +
+  theme(
+    axis.line = blank,
+    axis.text.y = blank,
+    axis.ticks.y = blank
+  ) +
+  
+  geom_histogram(binwidth = 2, col = "black", fill = .red) +
+  geom_vline(data = summarise(ma.final, mean = mean(dd.total)), aes(xintercept = mean),
+             col = .blue, linetype = "dashed", size = 1) +
+  scale_y_continuous(expand = expansion(0.01)) +
+  labs(x = blank, y = blank)
+
+ggsave(p.dd, filename = "output/plots/01_dddi_hist.png", height = 9, width = 12, units = "cm")
+
+#### Model Selection ####
+p.model <- tibble(
+  model = c(1, 2, 3, 4, 5, 6, 7, 8),
+  # AIC = AIC(m1, m2, m3, m4, m5, m6, m7, m8)$AIC,
+  BIC = BIC(m1, m2, m3, m4, m5, m6, m7, m8)$BIC,
+  AdjR2 = c(m1.summ$adj.r.squared, m2.summ$adj.r.squared, m3.summ$adj.r.squared, m4.summ$adj.r.squared, m5.summ$adj.r.squared, m6.summ$adj.r.squared,
+            m7.summ$adj.r.squared, m8.summ$adj.r.squared)
+) %>% 
+  pivot_longer(cols = c(BIC, AdjR2), names_to = "Test") %>% 
+  ggplot(aes(x = model, y = value)) +
+  theme_light() +
+  theme(
+    
+  ) +
+  
+  geom_point(size = 2) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1, 8, 1)) +
+  # stat_summary()
+  facet_wrap(~Test, scales = "free", nrow = 2) +
+  labs(x = "Model", y = blank) 
+
+ggsave(p.model, filename = "output/plots/01_model-selection_point.png", height = 15, width = 18, units = "cm")
 
 
 # Comparison Tables -------------------------------------------------------

@@ -58,6 +58,7 @@ m5 <- lm(dd.total ~ ., data = select(ma.final, dd.total, education, audit.total,
 m6 <- lm(dd.total ~., data = select(ma.final, dd.total, education, audit.total, sds.total, trait.total, k6.total, area.live))
 m7 <- lm(dd.total ~., data = select(ma.final, dd.total, education, audit.total, sds.total, trait.total, k6.total, area.live, sex))
 m8 <- lm(dd.total ~., select(ma.final, dd.total, education, audit.total, sds.total, trait.total, k6.total, area.live, sex, age))
+m9 <- lm(dd.total ~., select(ma.final, dd.total, education, audit.total, sds.total, trait.total, k6.total, sex, age))
 
 m1.summ <- summary(m1)
 m2.summ <- summary(m2)
@@ -67,6 +68,7 @@ m5.summ <- summary(m5)
 m6.summ <- summary(m6)
 m7.summ <- summary(m7)
 m8.summ <- summary(m8)
+m9.summ <- summary(m9)
 
 
 tibble(
