@@ -276,6 +276,12 @@ p.model <- tibble(
 
 ggsave(p.model, filename = "output/plots/01_model-selection_point.png", height = 15, width = 18, units = "cm")
 
+#### Final Model ####
+ma.final %>% 
+  ggplot(aes(x = dd.total, y = m3$fitted.values)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1) +
+  scale_x_continuous(breaks = seq(40, 120, 20))
 
 # Comparison Tables -------------------------------------------------------
 pvalue <- function(x, ...) {
