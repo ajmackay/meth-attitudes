@@ -252,6 +252,146 @@ p.dd <- ma.final %>%
 
 ggsave(p.dd, filename = "output/plots/01_dddi_hist.png", height = 9, width = 12, units = "cm")
 
+#### Correlation Plots ####
+p.cor.1 <- ma.final %>% 
+  select(where(is.numeric)) %>% 
+  pivot_longer(cols = c(age, audit.total, sds.total, k6.total, trait.total)) %>%
+  mutate(name = factor(name) %>% 
+         fct_recode("Age" = "age",
+                    "AUDIT-C" = "audit.total", 
+                    "SDS" = "sds.total",
+                    "K6" = "k6.total",
+                    "Trait Anger" = "trait.total")) %>% 
+  filter(name %in% c("Age", "K6")) %>% 
+  ggplot(aes(x = value, y = dd.total, col = name, fill = name)) +
+  
+  theme_light() +
+  theme(
+    legend.position = "none",
+    
+    panel.background = element_rect("#fdf6e3"),
+    panel.grid.major = blank,
+    panel.grid.minor.x = blank,
+    
+    strip.background = blank,
+    strip.text = element_text(colour = "black", size = 12)
+  ) +
+  scale_color_brewer(palette = "Set2") +
+  
+  geom_point() +
+  geom_smooth(method = "lm", linetype = "dashed", alpha = 0.1, col = swin.red,
+              size = 0.5) +
+  
+  facet_wrap(~name, scales = "free") +
+  labs(x = blank, y = "DDDI Score", col = "Predictor")
+
+ggsave(p.cor.1, filename = "output/plots/01_point_age-sex.png", height = 12, width = 20, units = "cm")  
+
+
+p.cor.2 <- ma.final %>% 
+  select(where(is.numeric)) %>% 
+  pivot_longer(cols = c(age, audit.total, sds.total, k6.total, trait.total)) %>%
+  mutate(name = factor(name) %>% 
+           fct_recode("Age" = "age",
+                      "AUDIT-C" = "audit.total", 
+                      "SDS" = "sds.total",
+                      "K6" = "k6.total",
+                      "Trait Anger" = "trait.total")) %>% 
+  filter(name %in% c("AUDIT-C", "SDS", "Trait Anger")) %>% 
+  ggplot(aes(x = value, y = dd.total, fill = name, col = name)) +
+  
+  theme_light() +
+  theme(
+    legend.position = "none",
+    
+    panel.background = element_rect("#fdf6e3"),
+    panel.grid.major = blank,
+    panel.grid.minor.x = blank,
+    
+    strip.background = blank,
+    strip.text = element_text(colour = "black", size = 12)
+  ) +
+  # scale_color_brewer(palette = "Set2") +
+  
+  geom_point() +
+  geom_smooth(method = "lm", linetype = "dashed", alpha = 0.1, col = swin.red,
+              size = 0.5) +
+  
+  facet_wrap(~name, scales = "free") +
+  labs(x = blank, y = "DDDI Score", col = "Predictor")
+
+ggsave(p.cor.2, filename = "output/plots/01_point_audit-sds-trait.png", height = 15, width = 30, units = "cm")
+
+
+#### Error Bars ####
+p.error <- ma.final %>% 
+  select(where(is.factor), dd.total) %>% 
+  pivot_longer(cols = c(sex, education, area.live)) %>% 
+  mutate(name = factor(name) %>% 
+           fct_recode("Sex" = "sex",
+                      "Education" = "education",
+                      "Residential Area" = "area.live")) %>% 
+  
+  ggplot(aes(x = value, y = dd.total, fill = value)) +
+  theme_light() +
+  theme(
+    legend.position = "none",
+    
+    panel.background = element_rect("#fdf6e3"),
+    panel.grid.major = blank,
+    panel.grid.minor.x = blank,
+    
+    strip.background = blank,
+    strip.text = element_text(colour = "black", size = 12)
+  ) +
+  
+  scale_fill_brewer(palette = "Paired") +
+  
+  geom_boxplot() + 
+  coord_flip() +
+  facet_wrap(~name, scales = "free", ncol = 1) +
+  
+  labs(x = blank, y = "DDDI Score") 
+
+ggsave(p.error, filename = "output/plots/01_error-bar_IVs.png",
+       height = 20, width = 25, units = "cm")
+
+
+
+
+
+  pivot_longer(cols = c(age, audit.total, sds.total, k6.total, trait.total)) %>%
+  mutate(name = factor(name) %>% 
+           fct_recode("Age" = "age",
+                      "AUDIT-C" = "audit.total", 
+                      "SDS" = "sds.total",
+                      "K6" = "k6.total",
+                      "Trait Anger" = "trait.total")) %>% 
+  filter(name %in% c("AUDIT-C", "SDS", "Trait Anger")) %>% 
+  ggplot(aes(x = value, y = dd.total, fill = name, col = name)) +
+  
+  theme_light() +
+  theme(
+    legend.position = "none",
+    
+    panel.background = element_rect("#fdf6e3"),
+    panel.grid.major = blank,
+    panel.grid.minor.x = blank,
+    
+    strip.background = blank,
+    strip.text = element_text(colour = "black", size = 12)
+  ) +
+  # scale_color_brewer(palette = "Set2") +
+  
+  geom_point() +
+  geom_smooth(method = "lm", linetype = "dashed", alpha = 0.1, col = swin.red,
+              size = 0.5) +
+  
+  facet_wrap(~name, scales = "free") +
+  labs(x = blank, y = "DDDI Score", col = "Predictor")
+
+ggsave(p.cor.2, filename = "output/plots/01_point_audit-sds-trait.png", height = 15, width = 30, units = "cm")
+
 #### Model Selection ####
 p.model <- tibble(
   model = c(1, 2, 3, 4, 5, 6, 7, 8),
