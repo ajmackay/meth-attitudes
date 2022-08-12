@@ -88,7 +88,14 @@ tibble(
 
 # I guess it's better to go with less predictors to avoid over-fitting? Is that how it works?
 
-#### Explorint m3 ####
+#### Exploring m3 ####
 confint(m3)
 
-ppcor::spcor(dplyr::select(ma.final, audit.total, sds.total, trait.total, dd.total))
+# Effect sizes
+part.cor <- ppcor::spcor(dplyr::select(ma.final, audit.total, sds.total, trait.total, dd.total))
+
+tibble(
+  Variable = c("AUDIT-C", "SDS", "STAXI-T", "DDDI"),
+  Part = data.frame(part.cor$estimate) %>% pull(dd.total),
+  F2 = (Part^2) / (1 - Part^2)
+)
