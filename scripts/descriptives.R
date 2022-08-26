@@ -290,6 +290,14 @@ miss.x <- select(dems.df, id, ma.ingest) %>% left_join(dd.df) %>%
   vis_miss()
 
 
+# DDDI --------------------------------------------------------------------
+## Exploring subscales
+ma.final %>% 
+  left_join(select(dd.df, id, dd.ne.total, dd.ad.total, dd.rd.total)) %>% 
+  select(audit.total, sds.total, trait.total, dd.ne.total, dd.ad.total, dd.rd.total) %>% 
+  ggpairs()
+  
+
 
 
 

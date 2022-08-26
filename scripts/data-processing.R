@@ -784,6 +784,10 @@ ma.final <- summ.df %>%
   select(id, age, sex, education, area.live,
          audit.total, sds.total, k6.total, trait.total, dd.total)
 
+ma.final.dd <- ma.final %>% 
+  left_join(select(dd.df, id, dd.ne.total, dd.ad.total, dd.rd.total))
+  
+
 # ma.final <- ma.final %>% 
 #   mutate(education = fct_collapse(education,
 #                                   "University Degree" = c("Bachelor Degree", "Postgraduate Degree"),

@@ -91,11 +91,29 @@ tibble(
 #### Exploring m3 ####
 confint(m3)
 
-# Effect sizes
-part.cor <- ppcor::spcor(dplyr::select(ma.final, audit.total, sds.total, trait.total, dd.total))
+source("scripts/functions.R")
 
-tibble(
-  Variable = c("AUDIT-C", "SDS", "STAXI-T", "DDDI"),
-  Part = data.frame(part.cor$estimate) %>% pull(dd.total),
-  F2 = (Part^2) / (1 - Part^2)
-)
+
+# DDDI Total
+lm.effect.size(dat = ma.final, 
+               iv = c("audit.total", "sds.total", "trait.total"),
+               dv = "dd.total")
+
+#### DDDI Subscales ####
+# Negative Emotional Driving
+m3.ne <- lm(data = ma.final.dd, dd.ne.total ~ audit.total + sds.total + trait.total)
+
+# Agressive Driving
+m3.ad <- lm(data = ma.final.dd, dd.ad.total ~ audit.total, sds.total, trait.total)
+
+# Risky Driving
+m3.rd <- lm(data = ma.final.dd, dd.rd.total ~ audit.total, sds.total, trait.total)
+
+summary(m3.ne)
+
+IVs <- c("audit.total", "sds.total", "trait.total")
+
+lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.ne.total")
+lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.ad.total")
+lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.rd.total")
+
