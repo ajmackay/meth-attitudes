@@ -1,4 +1,3 @@
-library(tidyverse)
 filez <- list.files("data/archive", full.names = TRUE)
 
 x <- map(filez, read_csv)

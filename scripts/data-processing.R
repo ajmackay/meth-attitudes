@@ -1,9 +1,8 @@
-packages <- c("tidyverse", "janitor", "table1", "gt", "naniar", "kableExtra")
-librarian::shelf(packages)
+source("scripts/load-packages.R")
 
 
 # Import ------------------------------------------------------------------
-survey.files <- list.files("data/", pattern = ".csv")
+survey.files <- list.files("data/", pattern = "*Meth-Survey.csv")
 survey.file <- survey.files[length(survey.files)]
 
 #### File moving ####
@@ -752,7 +751,7 @@ duid.strat.dich.df <- duid.strat.df %>%
 # Key dems and totals of assessments
 summ.df <- dems.df %>% 
   left_join(select(audit.df, id, audit.total, audit.risky, audit.full)) %>% 
-  left_join(select(ma.df, id, sds.total, sds.full, ma.type, ma.use.age)) %>% 
+  left_join(select(ma.df, id, ma.use.peak, sds.total, sds.full, ma.type, ma.use.age)) %>% 
   left_join(select(k6.df, id, k6.total, k6.full)) %>% 
   left_join(select(staxi.df, id, state.total, state.full, trait.total, trait.full)) %>% 
   left_join(select(dd.df, id, dd.total, dd.full)) %>% 

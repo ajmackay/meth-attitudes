@@ -1,8 +1,8 @@
+if(!"packages" %in% ls()){
+  source("scripts/load-packages.R")
+}
+
 load("objects/all-objects.RData")
-
-packages <- append(packages, c("stargazer", "flextable", "xaringan", "DT", "patchwork"))
-
-librarian::shelf(packages)
 
 
 

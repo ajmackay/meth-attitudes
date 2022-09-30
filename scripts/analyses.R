@@ -1,5 +1,6 @@
-packages <- append(packages, c("GGally", "mctest", "leaps"))
-librarian::shelf(packages)
+if(!"packages" %in% ls()){
+  source("scripts/load-packages.R")
+}
 
 
 load("objects/all-objects.RData")

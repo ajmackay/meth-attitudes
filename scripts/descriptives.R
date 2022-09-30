@@ -1,5 +1,6 @@
-packages <- c("tidyverse", "janitor", "table1", "gt", "naniar", "kableExtra")
-librarian::shelf(packages)
+if(!"packages" %in% ls()){
+  source("scripts/load-packages.R")
+}
 
 # source("scripts/data-processing.R")
 load("objects/all-objects.RData")
