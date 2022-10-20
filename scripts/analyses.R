@@ -118,3 +118,16 @@ lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.ne.total")
 lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.ad.total")
 lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.rd.total")
 
+
+# DDDI Subsets ------------------------------------------------------------
+ma.final %>% 
+  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
+  group_by(dd.subscale) %>% 
+  summarise(mean = mean(value),
+            sd = sd(value),
+            se = sd/sqrt(n())) %>% 
+  ggplot(aes(x = dd.subscale, y = mean, fill = dd.subscale)) +
+  geom_bar(stat = "identity", color = "black",
+           position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean+sd), width = .2)
+
