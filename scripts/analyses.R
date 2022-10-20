@@ -123,11 +123,23 @@ lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.rd.total")
 ma.final %>% 
   pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
   group_by(dd.subscale) %>% 
+  summarise(n())
+
+# Assess difference between subsets means
+ma.final %>% 
+  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
+  group_by(dd.subscale) %>% 
   summarise(mean = mean(value),
             sd = sd(value),
-            se = sd/sqrt(n())) %>% 
+            se = sd/sqrt(n())) %>% identity()
   ggplot(aes(x = dd.subscale, y = mean, fill = dd.subscale)) +
   geom_bar(stat = "identity", color = "black",
            position = position_dodge()) +
   geom_errorbar(aes(ymin = mean - sd, ymax = mean+sd), width = .2)
 
+  ma.final %>% 
+    pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
+    ggplot(aes(x = dd.subscale, y = value, fill = dd.subscale)) +
+    stat_summary(geom = "errorbar")
+  
+                 
