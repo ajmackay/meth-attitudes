@@ -5,6 +5,9 @@ if(!"packages" %in% ls()){
 
 load("objects/all-objects.RData")
 
+ma.final <- ma.final %>% 
+  mutate(sex = factor(sex, levels = c("Male", "Female")))
+
 # Univariate Statistics ---------------------------------------------------
 uni.summ <- ma.final %>% 
   select(age, audit.total:dd.total) %>% 
@@ -41,7 +44,19 @@ imcdiag(model)
 
 # Regression Analysis -----------------------------------------------------
 # All Subsets Regression
-models <- regsubsets(dd.total ~ ., nvmax = 10, data = select(ma.final, -id), nbest = 1)
+model.vars <- c(
+  "age",
+  "sex",
+  "education",
+  "area.live",
+  "audit.total",
+  "sds.total",
+  "k6.total",
+  "trait.total",
+  "dd.total"
+)
+
+models <- regsubsets(dd.total ~ ., data = select(ma.final, all_of(model.vars)), nbest = 1, method = "exhaustive")
 
 models.summ <- summary(models)
 
@@ -118,6 +133,57 @@ lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.ne.total")
 lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.ad.total")
 lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.rd.total")
 
+
+# Best Possible Subsets take 2 --------------------------------------------
+## So apparently 'leaps' only works with quantitative variables (so not good for our factors...)
+librarian::shelf("olsrr")
+
+
+model.vars <- c(
+  "age",
+  "sex",
+  "education",
+  "area.live",
+  "audit.total",
+  "sds.total",
+  "k6.total",
+  "trait.total",
+  "dd.total"
+)
+
+model <- lm(dd.total ~ ., data = select(ma.final, model.vars))
+
+# ols_step_all_possible(model)
+
+bs <- ols_step_best_subset(model)
+
+tibble(
+  model = bs$n,
+  adjr = bs$adjr,
+  cp = bs$cp,
+  aic = bs$aic,
+  sbic = bs$sbic
+) %>% 
+  pivot_longer(cols = -model) %>% 
+  ggplot(aes(x = model, y = value)) +
+  geom_point() +
+  geom_line() +
+  
+  scale_x_continuous(breaks = 1:12) +
+  
+  facet_wrap(name~., scales = "free")
+
+# w education dummy variable
+model.vars <- fastDummies::dummy_cols(ma.final, select_columns = "education") %>% 
+  select(-c(id, education, dd.ne.total, dd.ad.total, dd.rd.total)) 
+
+model <- lm(dd.total ~ ., data = model.vars)
+
+bs <- ols_step_best_subset(model)
+
+
+final.model <- lm(dd.total ~ ., select(model.vars, dd.total, audit.total, sds.total, trait.total, `education_Did not finish High School`))
+final.model <- lm(dd.total ~ ., select(ma.final, dd.total, audit.total, sds.total, trait.total, education))
 
 # DDDI Subsets ------------------------------------------------------------
 ma.final %>% 
