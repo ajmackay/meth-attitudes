@@ -1,3 +1,5 @@
+# Data Prep ---------------------------------------------------------------
+
 if(!"packages" %in% ls()){
   source("scripts/load-packages.R")
 }
@@ -56,7 +58,7 @@ model.vars <- c(
   "dd.total"
 )
 
-models <- regsubsets(dd.total ~ ., data = select(ma.final, all_of(model.vars)), nbest = 1, method = "exhaustive")
+models <- leaps::regsubsets(dd.total ~ ., data = select(ma.final, all_of(model.vars)), nbest = 1, method = "exhaustive")
 
 models.summ <- summary(models)
 
@@ -136,7 +138,7 @@ lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.rd.total")
 
 # Best Possible Subsets take 2 --------------------------------------------
 ## So apparently 'leaps' only works with quantitative variables (so not good for our factors...)
-librarian::shelf("olsrr")
+### The above may not be true - leaps just automatically converts the categorical variable into dummies so may not be all that bad rly...
 
 
 model.vars <- c(
@@ -151,10 +153,16 @@ model.vars <- c(
   "dd.total"
 )
 
+#### Using dummy variables for education ####
+dummy.vars <- fastDummies::dummy_cols(ma.final, select_columns = "education") %>% 
+  select(-c(id, education, dd.ne.total, dd.ad.total, dd.rd.total)) 
+
+# Model without dummy education then put into best subsets
 model <- lm(dd.total ~ ., data = select(ma.final, model.vars))
 
 # ols_step_all_possible(model)
 
+# Best subsets regression
 bs <- ols_step_best_subset(model)
 
 tibble(
@@ -173,17 +181,48 @@ tibble(
   
   facet_wrap(name~., scales = "free")
 
-# w education dummy variable
-model.vars <- fastDummies::dummy_cols(ma.final, select_columns = "education") %>% 
-  select(-c(id, education, dd.ne.total, dd.ad.total, dd.rd.total)) 
-
-model <- lm(dd.total ~ ., data = model.vars)
-
-bs <- ols_step_best_subset(model)
 
 
-final.model <- lm(dd.total ~ ., select(model.vars, dd.total, audit.total, sds.total, trait.total, `education_Did not finish High School`))
-final.model <- lm(dd.total ~ ., select(ma.final, dd.total, audit.total, sds.total, trait.total, education))
+# Final model with education dummy variable
+final.model.educ <- lm(dd.total ~ ., select(dummy.vars, dd.total, audit.total, sds.total, trait.total, 
+                                                       `education_Did not finish High School`,`education_Did not finish University`,
+                                                       `education_Highschool/Technical Degree`, `education_University Degree`))
+final.model.educ %>% tbl_regression()
+
+final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total))
+
+summary(final.model)
+
+
+#### Running first model with dummy vars ####
+model.dummy <- lm(dd.total ~ ., data = dummy.vars)
+
+bs <- ols_step_best_subset(model.dummy)
+
+tibble(
+  model = bs$n,
+  adjr = bs$adjr,
+  cp = bs$cp,
+  aic = bs$aic,
+  sbic = bs$sbic
+) %>% 
+  pivot_longer(cols = -model) %>% 
+  ggplot(aes(x = model, y = value)) +
+  geom_point() +
+  geom_line() +
+  
+  scale_x_continuous(breaks = 1:12) +
+  
+  facet_wrap(name~., scales = "free")
+
+
+final.model2 <- lm(dd.total ~ ., select(model.vars, dd.total, audit.total, sds.total, trait.total, `education_Did not finish High School`))
+
+
+
+
+# No dummy
+# final.model <- lm(dd.total ~ ., select(ma.final, dd.total, audit.total, sds.total, trait.total, education))
 
 # DDDI Subsets ------------------------------------------------------------
 ma.final %>% 
