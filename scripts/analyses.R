@@ -140,7 +140,7 @@ lm.effect.size(ma.final.dd, iv = IVs, dv = "dd.rd.total")
 ## So apparently 'leaps' only works with quantitative variables (so not good for our factors...)
 ### The above may not be true - leaps just automatically converts the categorical variable into dummies so may not be all that bad rly...
 
-
+# Variables to include in model
 model.vars <- c(
   "age",
   "sex",
@@ -158,11 +158,10 @@ dummy.vars <- fastDummies::dummy_cols(ma.final, select_columns = "education") %>
   select(-c(id, education, dd.ne.total, dd.ad.total, dd.rd.total)) 
 
 # Model without dummy education then put into best subsets
+## UPDATE: lm() automatically converts factor into dummy
 model <- lm(dd.total ~ ., data = select(ma.final, model.vars))
 
-# ols_step_all_possible(model)
-
-# Best subsets regression
+# Best subsets regression (selects based on highest R2 value)
 bs <- ols_step_best_subset(model)
 
 tibble(
@@ -183,16 +182,81 @@ tibble(
 
 
 
-# Final model with education dummy variable
-final.model.educ <- lm(dd.total ~ ., select(dummy.vars, dd.total, audit.total, sds.total, trait.total, 
-                                                       `education_Did not finish High School`,`education_Did not finish University`,
-                                                       `education_Highschool/Technical Degree`, `education_University Degree`))
-final.model.educ %>% tbl_regression()
+# Final model
+final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total, education)) # Automatically converts education to dummy
+final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total)) # Automatically converts education to dummy
 
-final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total))
+
+final.model %>% gtsummary::tbl_regression()
+
+final.model %>% tidy(conf.int = TRUE) %>% mutate(across(where(is.numeric), ~round(.x, 2))) %>% 
+  write_csv("output/regression/final-model-coef-3vars.csv")
+
+
+
 
 summary(final.model)
 
+
+
+
+# Best Possible based on adj R2 -------------------------------------------
+all.poss <- ols_step_all_possible(model)
+
+all.poss %>% 
+  group_by(n) %>% 
+  arrange(n, desc(adjr)) %>% 
+  slice(1) %>% 
+  pivot_longer(cols = c(rsquare, adjr, aic, sbic), names_to = "measure") %>% 
+  ggplot(aes(x = n, y = value)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~measure, scales = "free")
+
+
+
+#### Effect Sizes (cannot do Cohen's f2 for categorical variables) ####
+final.model.df <- ma.final %>% 
+  fastDummies::dummy_cols(select_columns = "education") %>%
+  select(dd.total, audit.total, sds.total, trait.total, starts_with("education_"))
+
+lm.effect.size(final.model.df, iv = c("audit.total", "sds.total", "trait.total"), 
+               dv = "dd.total")
+
+
+
+
+
+
+# DDDI Subsets ------------------------------------------------------------
+ma.final %>% 
+  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
+  group_by(dd.subscale) %>% 
+  summarise(n())
+
+# Assess difference between subsets means
+ma.final %>% 
+  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
+  group_by(dd.subscale) %>% 
+  summarise(mean = mean(value),
+            sd = sd(value),
+            se = sd/sqrt(n())) %>% 
+  ggplot(aes(x = dd.subscale, y = mean, fill = dd.subscale)) +
+  geom_bar(stat = "identity", color = "black",
+           position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean+sd), width = .2)
+
+  
+ma.final %>% 
+  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
+  ggplot(aes(x = dd.subscale, y = value, fill = dd.subscale)) +
+  stat_summary(geom = "errorbar")
+  
+  
+
+
+# Archive -----------------------------------------------------------------
+stop("Archive Ahead")
 
 #### Running first model with dummy vars ####
 model.dummy <- lm(dd.total ~ ., data = dummy.vars)
@@ -217,34 +281,11 @@ tibble(
 
 
 final.model2 <- lm(dd.total ~ ., select(model.vars, dd.total, audit.total, sds.total, trait.total, `education_Did not finish High School`))
-
-
-
-
-# No dummy
-# final.model <- lm(dd.total ~ ., select(ma.final, dd.total, audit.total, sds.total, trait.total, education))
-
-# DDDI Subsets ------------------------------------------------------------
-ma.final %>% 
-  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
-  group_by(dd.subscale) %>% 
-  summarise(n())
-
-# Assess difference between subsets means
-ma.final %>% 
-  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
-  group_by(dd.subscale) %>% 
-  summarise(mean = mean(value),
-            sd = sd(value),
-            se = sd/sqrt(n())) %>% identity()
-  ggplot(aes(x = dd.subscale, y = mean, fill = dd.subscale)) +
-  geom_bar(stat = "identity", color = "black",
-           position = position_dodge()) +
-  geom_errorbar(aes(ymin = mean - sd, ymax = mean+sd), width = .2)
-
-  ma.final %>% 
-    pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
-    ggplot(aes(x = dd.subscale, y = value, fill = dd.subscale)) +
-    stat_summary(geom = "errorbar")
   
                  
+
+# 
+# final.model.educ <- lm(dd.total ~ ., select(dummy.vars, dd.total, audit.total, sds.total, trait.total,
+#                                                        `education_Did not finish High School`,`education_Did not finish University`,
+#                                                        `education_Highschool/Technical Degree`, `education_University Degree`))
+# final.model.educ %>% tbl_regression()

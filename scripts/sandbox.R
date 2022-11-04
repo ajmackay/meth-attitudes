@@ -1,3 +1,13 @@
+library(broom)
+tidy(final.model, conf.int = TRUE)
+
+
+final.model2 <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total)) # Automatically converts education to dummy
+
+final.model2 %>% tbl_regression()
+
+
+
 filez <- list.files("data/archive", full.names = TRUE)
 
 x <- map(filez, read_csv)
