@@ -1,0 +1,5 @@
+term,estimate,std.error,statistic,p.value
+(Intercept),17.171,5.942,2.89,0.005
+trait.total,1.557,0.255,6.108,<.001
+sds.total,1.338,0.589,2.269,0.026
+audit.total,1.535,0.578,2.656,0.01

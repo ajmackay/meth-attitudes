@@ -222,7 +222,15 @@ ma.df <- survey.screened %>%
                                                       "19" = "19 years old",
                                                       "18" = "18 years of age",
                                                       "20" = "Twenty years of age"))),
-    ma.use.ways = q54, # Think about how to organise factors
+    # ma.use.ways = q54,
+    ma.use.ways = case_when(
+      str_detect(q54, "Injection") ~ "Injection",
+      str_detect(q54, "IV") ~ "Injection",
+      str_detect(q54, "Smoking") ~ "Smoking",
+      str_detect(q54, "Snorting") ~ "Snorting",
+      str_detect(q54, "mouth") ~ "Oral",
+      TRUE ~ NA_character_
+    ),
     # SDS Scale (Re-scored to not use zero as R is weird with zeros)
     sds.1 = as.numeric(fct_recode(as_factor(q55),
                                                 "1" = "Never or almost never",
@@ -318,7 +326,9 @@ k6.df <- survey.screened %>%
                                               "5" = "All of the time")
     ),
     k6.total = k6.nervous + k6.hopeless + k6.restless + k6.depressed + k6.effort + k6.worthless,
-    k6.full = !is.na(k6.total)
+    k6.full = !is.na(k6.total),
+    
+    psychiatric.diagnosis = q46
   )
 
 
@@ -752,7 +762,7 @@ duid.strat.dich.df <- duid.strat.df %>%
 summ.df <- dems.df %>% 
   left_join(select(audit.df, id, audit.total, audit.risky, audit.full)) %>% 
   left_join(select(ma.df, id, ma.use.peak, sds.total, sds.full, ma.type, ma.use.age)) %>% 
-  left_join(select(k6.df, id, k6.total, k6.full)) %>% 
+  left_join(select(k6.df, id, k6.total, k6.full, psychiatric.diagnosis)) %>% 
   left_join(select(staxi.df, id, state.total, state.full, trait.total, trait.full)) %>% 
   left_join(select(dd.df, id, dd.ne.total, dd.ad.total, dd.rd.total, dd.total, dd.full)) %>% 
   left_join(select(dui.inst.att.df, id, dui.inst.revoked, dui.att.total, dui.att.full)) %>% 
@@ -778,12 +788,15 @@ ma.id <- summ.df %>%
          # duid.att.full
   ) %>% pull(id)
 
+
 ma.final <- summ.df %>% 
   filter(id %in% ma.id) %>% 
   select(id, age, sex, education, area.live,
          audit.total, sds.total, k6.total, trait.total, 
          dd.ne.total, dd.ad.total, dd.rd.total, dd.total)
 
+ma.final <- ma.final %>% 
+  mutate(sex = factor(sex, levels = c("Male", "Female")))
 
 
 # ma.final <- ma.final %>% 
@@ -802,7 +815,7 @@ ma.dems <- ma.df %>%
   mutate(dependent = dependent == "MUD")
 
 
-
+#### Save Image ####
 save.image(file = "objects/all-objects.RData")
 
 
