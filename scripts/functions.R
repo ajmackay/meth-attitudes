@@ -1,15 +1,17 @@
 lm.effect.size <- function(dat, iv, dv){
   # browser()
   part.cor <- ppcor::spcor(select(dat, !!enquo(iv), !!enquo(dv)))
+  partial.cor <- ppcor::pcor(select(dat, !!enquo(iv), !!enquo(dv)))
   
   message(str_c("Dependent Variable: ", dv))
   
   tibble(
-    variable = c(iv, dv),
+    Variable = c(iv, dv),
     Part = data.frame(part.cor$estimate) %>% pull(!!enquo(dv)),
+    Partial = data.frame(partial.cor$estimate) %>% pull(!!enquo(dv)),
     F2 = (Part^2) / (1 - Part^2)
   ) %>% 
-    filter(variable != dv)
+    filter(Variable != dv)
 }
 
 

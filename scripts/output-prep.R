@@ -110,8 +110,8 @@ if(FALSE){
 }
 
 #### Best Subsets selection ####
-plt.subset.selection +
-  plot.theme
+# plt.subset.selection +
+#   plot.theme
 
 plt.subset.comparison +
   plot.theme
@@ -121,7 +121,8 @@ final.model %>% tbl_regression()
 
 final.model %>% tidy() %>% 
   mutate(p.value = if_else(p.value < .001, "<.001", as.character(round(p.value, 3))),
-         across(where(is.numeric), ~round(.x, 3))) %>% 
+         across(where(is.numeric), ~round(.x, 2)),
+         CI = confint(final.model)) 
   write_csv("output/regression output/basic-regress.csv")
 
 ma.final %>% 
@@ -131,6 +132,9 @@ ma.final %>%
   write_csv("output/regression output/cohens-f.csv")
 
 
+best.poss %>% 
+  mutate(across(where(is.numeric), ~round(.x, 2))) %>% 
+  write_csv("output/regression output/best-models.csv")
 
 
 
@@ -357,7 +361,10 @@ p.dd <- ma.final %>%
 
 ggsave(p.dd, filename = "output/plots/01_dddi_hist.png", height = 9, width = 12, units = "cm")
 
-#### Correlation Plots ####
+
+# Correlation Plots -------------------------------------------------------
+
+
 p.cor.1 <- ma.final %>% 
   select(where(is.numeric)) %>% 
   pivot_longer(cols = c(age, audit.total, sds.total, k6.total, trait.total)) %>%
@@ -496,6 +503,9 @@ ggsave(p.error, filename = "output/plots/01_error-bar_IVs.png",
   labs(x = blank, y = "DDDI Score", col = "Predictor")
 
 ggsave(p.cor.2, filename = "output/plots/01_point_audit-sds-trait.png", height = 15, width = 30, units = "cm")
+
+
+# Model Selection ---------------------------------------------------------
 
 #### Model Selection ####
 p.model <- tibble(

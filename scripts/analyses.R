@@ -88,6 +88,12 @@ summary(final.model)
 
 # Best Possible based on adj R2 -------------------------------------------
 all.poss <- ols_step_all_possible(model)
+best.poss <- all.poss %>% 
+  group_by(n) %>% 
+  arrange(n, desc(adjr)) %>% 
+  slice(1) %>% 
+  select(n, predictors, rsquare, adjr, aic)
+
 
 plt.subset.selection <- all.poss %>% 
   group_by(n) %>% 

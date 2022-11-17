@@ -1,0 +1,9 @@
+N Predictors,Variables,rsquare,adjr,aic
+1,trait.total,0.42,0.41,618.21
+2,audit.total trait.total,0.48,0.47,610.72
+3,audit.total sds.total trait.total,0.52,0.5,607.47
+4,education audit.total sds.total trait.total,0.55,0.51,608.31
+5,education area.live audit.total sds.total trait.total,0.55,0.51,609.74
+6,education area.live audit.total sds.total k6.total trait.total,0.55,0.5,611.42
+7,sex education area.live audit.total sds.total k6.total trait.total,0.55,0.49,613.3
+8,age sex education area.live audit.total sds.total k6.total trait.total,0.55,0.49,615.28
