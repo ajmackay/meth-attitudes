@@ -1,12 +1,9 @@
-if(!"packages" %in% ls()){
-  source("scripts/load-packages.R")
-}
 
-load("objects/all-objects.RData")
 
 
 # Setup -------------------------------------------------------------------
 blank <- element_blank()
+
 plot.theme <- theme_classic() +
   theme(
     title = element_text(size = 12)
@@ -35,106 +32,6 @@ swin.red <- "#E4051F"
 hsize <- 4
 
 
-# Paper -------------------------------------------------------------------
-#### Demographics ####
-ma.all.df <- summ.df %>% 
-  filter(id %in% ma.id) %>% 
-  mutate(sex = factor(sex, levels = c("Male", "Female")))
-
-dems.summ <- ma.all.df %>% 
-  select(sex, age, education, employment.status, psychiatric.diagnosis) %>% 
-  mutate(psychiatric.diagnosis = !is.na(psychiatric.diagnosis),
-         
-         # Ordering factor variables
-         education = factor(education, c("Did not finish High School",
-                                         "Did not finish University",
-                                         "Highschool/Technical Degree",
-                                         "University Degree")),
-         employment.status = fct_collapse(employment.status,
-                                          Unemployed = c("Unemployed looking for work",
-                                                         "Unemployed not looking for work")),
-         
-         employment.status = factor(employment.status, c("Student",
-                                                         "Homemaker",
-                                                         "Employed part time",
-                                                         "Employed full time",
-                                                         "Unemployed"))) %>% 
-  tbl_summary(label = c(sex ~ "Sex",
-                        age ~ "Age",
-                        education ~ "Education",
-                        employment.status ~ "Employment Status",
-                        psychiatric.diagnosis ~ "Any Psychiatric Diagnosis"),
-              statistic = all_continuous() ~ c("{mean} ({sd}) [{min}-{max}]")) %>% 
-  bold_labels()
-
-if(FALSE){
-dems.summ %>% as_flex_table() %>% 
-  flextable::save_as_docx(path = "output/dems-table.docx")
-}
-
-#### Substance use characteristics ####
-substance.summ <- ma.all.df %>% 
-  left_join(
-    druguse.df %>% 
-      filter(id %in% ma.id) %>% 
-      mutate(other.drug = if_else((cocaine != "Never" | cannabis != "Never" | club.drugs != "Never" | 
-                                     hallucinogens != "Never" | inhalants != "Never" | heroin != "Never" |
-                                     sedatives != "Never" | new.psychoactive != "Never"), "Yes", "No"))
-  ) %>% 
-  left_join(
-    ma.df %>% 
-      filter(id %in% ma.id) %>% 
-      select(id, ma.recent.use, ma.use.ways)
-  ) %>% 
-  select(audit.risky, other.drug, ma.use.peak, severity.dependence = ma.type, ma.recent.use, ma.use.age, ma.use.peak, ma.use.ways) %>% 
-
-  mutate(audit.risky = if_else(audit.risky == "TRUE", "At risk", "Not at risk"),
-         ma.use.peak = factor(ma.use.peak, levels = c("1 to 2 times per month",
-                                                      "Weekly",
-                                                      "Daily")),
-         ma.use.ways = factor(ma.use.ways, levels = c("Snorting", "Oral", "Smoking", "Injection"))) %>% 
-  tbl_summary(label = c(audit.risky ~ "Audit Use Disorder",
-                        other.drug ~ "Other Illicit Drug Use",
-                        severity.dependence ~ "Substance Dependence",
-                        ma.recent.use ~ "Last time using",
-                        ma.use.age ~ "Age of first use",
-                        ma.use.peak ~ "Frequency of use at peak",
-                        ma.use.ways ~ "Mode of use"),
-              statistic = list(all_continuous() ~ c("{mean} ({sd}) [{min}-{max}]")
-              )
-  ) %>% bold_labels()
-
-if(FALSE){
-  substance.summ %>% as_flex_table() %>% 
-    flextable::save_as_docx(path = "output/substance-summ-table.docx")
-}
-
-#### Best Subsets selection ####
-# plt.subset.selection +
-#   plot.theme
-
-plt.subset.comparison +
-  plot.theme
-
-#### Regression Output ####
-final.model %>% tbl_regression()
-
-final.model %>% tidy() %>% 
-  mutate(p.value = if_else(p.value < .001, "<.001", as.character(round(p.value, 3))),
-         across(where(is.numeric), ~round(.x, 2)),
-         CI = confint(final.model)) 
-  write_csv("output/regression output/basic-regress.csv")
-
-ma.final %>% 
-  select(dd.total, trait.total, sds.total, audit.total) %>% 
-  lm.effect.size(dv = "dd.total", iv = c("trait.total", "sds.total", "audit.total")) %>% 
-  mutate(across(where(is.numeric), ~round(.x, 3))) %>% 
-  write_csv("output/regression output/cohens-f.csv")
-
-
-best.poss %>% 
-  mutate(across(where(is.numeric), ~round(.x, 2))) %>% 
-  write_csv("output/regression output/best-models.csv")
 
 
 
@@ -143,8 +40,7 @@ best.poss %>%
 
 
 
-
-
+stop("Do it manually you fool")
 # Demographic charts ------------------------------------------------------
 # sds, peak use,
 p.age <- ma.final %>% 
@@ -167,7 +63,7 @@ p.age <- ma.final %>%
 ggsave(p.age, filename = "output/plots/01_age.png", width = 12, height = 9, units = "cm")
 
 
-fill.donut <- c("#ece7f2", "#2b8cbe")
+fill.donut <- c("#2b8cbe", "#ece7f2")
 
 p.area <- ma.final %>% 
   count(area.live) %>% 
@@ -210,7 +106,7 @@ p.sex <- ma.final %>%
   #           position = position_stack(vjust = 0.5),
   #           col = "white") +
   labs(x = blank, y = blank, fill = blank,
-       title = "Sex")
+       title = blank)
 
 ggsave(p.sex, filename = "output/plots/01_sex-donut.png", width = 9, height = 9, units = "cm")
   

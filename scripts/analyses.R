@@ -4,6 +4,7 @@ if(!"packages" %in% ls()){
   source("scripts/load-packages.R")
 }
 
+source("scripts/functions.R")
 
 load("objects/all-objects.RData")
 
@@ -113,7 +114,7 @@ plt.subset.comparison <- all.poss %>%
   ggplot(aes(x = n, y = value)) +
   geom_point() +
   geom_line() +
-  facet_wrap(~measure, scales = "free")
+  facet_wrap(~measure, scales = "free", nrow = 2)
 
 
 #### Effect Sizes (cannot do Cohen's f2 for categorical variables) ####
@@ -129,18 +130,35 @@ lm.effect.size(final.model.df, iv = c("audit.total", "sds.total", "trait.total")
 
 
 # DDDI Subsets ------------------------------------------------------------
-ma.final %>% 
+dd.subset.summ <- ma.final %>% 
   pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
   group_by(dd.subscale) %>% 
-  summarise(n())
+  summarise(mean = mean(value),
+            median = median(value),
+            sd = sd(value),
+            n = n(),
+            error = margin.error(sd = sd, n = n),
+            lower = mean - error,
+            upper = mean + error) %>% 
+  ungroup()
+
+
+
 
 # Assess difference between subsets means
+
+#### Multivariate Regression ####
+lm.mv <- lm(cbind(dd.ad.total, dd.ne.total, dd.rd.total) ~ audit.total + sds.total + trait.total, data = ma.final)
+
+
+
 ma.final %>% 
   pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
   group_by(dd.subscale) %>% 
   summarise(mean = mean(value),
             sd = sd(value),
-            se = sd/sqrt(n())) %>% 
+            se = sd/sqrt(n()),
+            lower = ) %>% 
   ggplot(aes(x = dd.subscale, y = mean, fill = dd.subscale)) +
   geom_bar(stat = "identity", color = "black",
            position = position_dodge()) +
