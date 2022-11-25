@@ -96,7 +96,7 @@ best.poss <- all.poss %>%
   select(n, predictors, rsquare, adjr, aic)
 
 
-plt.subset.selection <- all.poss %>% 
+p.subset.selection <- all.poss %>% 
   group_by(n) %>% 
   arrange(n, desc(adjr)) %>% 
   slice(1) %>% 
@@ -106,15 +106,23 @@ plt.subset.selection <- all.poss %>%
   geom_line() +
   facet_wrap(~measure, scales = "free")
 
-plt.subset.comparison <- all.poss %>% 
+p.subset.comparison <- all.poss %>% 
   group_by(n) %>% 
   arrange(n, desc(adjr)) %>% 
   slice(1) %>% 
   pivot_longer(cols = c(adjr, aic), names_to = "measure") %>% 
   ggplot(aes(x = n, y = value)) +
-  geom_point() +
+  geom_point(size = 2) +
   geom_line() +
-  facet_wrap(~measure, scales = "free", nrow = 2)
+  
+  scale_x_continuous(breaks = seq(1, 8)) +
+  labs(y = element_blank(),
+       x = "N") +
+  
+  facet_wrap(~measure, scales = "free", ncol = 2,
+             labeller = as_labeller(c(
+               `adjr` =  "Adjusted R2", 
+               `aic` =  "AIC")))
 
 
 #### Effect Sizes (cannot do Cohen's f2 for categorical variables) ####

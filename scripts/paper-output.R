@@ -7,10 +7,15 @@ load("objects/all-objects.RData")
 source("scripts/output-prep.R")
 
 
+# Tring this officer thing ------------------------------------------------
+output.doc <- read_docx()
+
+
 #### Demographics ####
 ma.all.df <- summ.df %>% 
   filter(id %in% ma.id) %>% 
-  mutate(sex = factor(sex, levels = c("Male", "Female")))
+  mutate(sex = factor(sex, levels = c("Male", "Female")),
+         audit.risky = replace_na(audit.risky, FALSE)) 
 
 dems.summ.tbl <- ma.all.df %>% 
   select(sex, age, education, employment.status, psychiatric.diagnosis) %>% 
@@ -67,36 +72,65 @@ substance.summ.prep <- ma.all.df %>%
          ma.use.ways = factor(ma.use.ways, levels = c("Snorting", "Oral", "Smoking", "Injection")))
 
 
-substance.summ.tbl 
-
-substance.summ.prep %>% 
-  relocate(ma.use.age, audit.risky, ma.)
-  tbl_summary(label = c(audit.risky ~ "Alcochol Use Disorder",
+substance.summ.tbl <- substance.summ.prep %>% 
+  relocate(ma.use.age, audit.risky, ma.use.peak, ma.recent.use, ma.use.ways,
+           other.drug, severity.dependence) %>% 
+  tbl_summary(label = c(audit.risky ~ "Alcohol Use Disorder",
                         severity.dependence ~ "Substance Dependence Severity",
                         ma.recent.use ~ "Last Meth Use",
                         ma.use.age ~ "Age of First Use",
                         ma.use.peak ~ "Frequency of Use at Peak",
-                        ma.use.ways ~ "Mode of use",
+                        ma.use.ways ~ "Mode of Use",
                         other.drug ~ "Other Illicit Drug Use"),
               
               
               statistic = list(all_continuous() ~ c("{mean} ({sd}) [{min}-{max}]")
               )
-  ) %>% bold_labels()
+  ) %>% bold_labels() %>% 
+  as_flex_table()
 
 if(FALSE){
-  substance.summ %>% as_flex_table() %>% 
+  substance.summ.tbl %>% 
     flextable::save_as_docx(path = "output/substance-summ-table.docx")
 }
+
+
 
 #### Best Subsets selection ####
 # plt.subset.selection +
 #   plot.theme
 
-plt.subset.comparison +
-  plot.theme +
-  theme(panel.grid.major.x = element_line(),
-        panel.grid.minor.x = element_line())
+p.subset <- p.subset.comparison +
+  labs(x = blank) +
+  theme_light()+
+  theme(panel.background = blank,
+        panel.grid.major.y = blank,
+        panel.grid.minor = blank,
+        panel.grid.major.x = element_line(),
+        panel.grid.minor.x = blank,
+        
+        strip.background = element_rect(fill = "white",
+                                        color = "black"),
+        strip.text = element_text(colour = "black", face = "bold",
+                                  size = 10))
+
+# Save plot
+if(FALSE){
+ggsave(p.subset,
+       width = 10,
+       height = 10,
+       units = "cm",
+       filename = "output/tmp/subset.png")
+
+
+# camcorder::gg_record(dir = "output/tmp",
+#                      device = "png",
+#                      width = 8,
+#                      height = 5,
+#                      units = "in")
+# }
+
+
 
 #### Regression Output ####
 final.model %>% tbl_regression()
@@ -142,4 +176,23 @@ lm.mv %>%
          across(where(is.numeric), ~round(.x, 2))) %>% left_join(
            lm.effect.size(ma.final, dv = "dd.ad.total", iv = c("audit.total", "sds.total", "trait.total")) %>% 
              mutate(response = "dd.ad.total"), by = c("term" = "Variable", "response")
-         ) %>% 
+         )
+
+
+# Output ------------------------------------------------------------------
+output.doc <- read_docx()
+
+
+output.doc <- body_add_flextable(output.doc,
+                                 substance.summ.tbl)
+
+output.doc <- body_add_gg(output.doc, p.subset,
+                          height = 5,
+                          width = 8)
+
+
+if(FALSE){
+  print(output.doc, target = "output/tables-plots.docx")
+  
+}
+  
