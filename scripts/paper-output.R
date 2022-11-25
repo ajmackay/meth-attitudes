@@ -2,10 +2,9 @@ if(!"packages" %in% ls()){
   source("scripts/load-packages.R")
 }
 
-source("scripts/output-prep.R")
-
 load("objects/all-objects.RData")
 
+source("scripts/output-prep.R")
 
 
 #### Demographics ####
@@ -13,7 +12,7 @@ ma.all.df <- summ.df %>%
   filter(id %in% ma.id) %>% 
   mutate(sex = factor(sex, levels = c("Male", "Female")))
 
-dems.summ <- ma.all.df %>% 
+dems.summ.tbl <- ma.all.df %>% 
   select(sex, age, education, employment.status, psychiatric.diagnosis) %>% 
   mutate(psychiatric.diagnosis = !is.na(psychiatric.diagnosis),
          
@@ -31,6 +30,7 @@ dems.summ <- ma.all.df %>%
                                                          "Employed part time",
                                                          "Employed full time",
                                                          "Unemployed"))) %>% 
+  
   tbl_summary(label = c(sex ~ "Sex",
                         age ~ "Age",
                         education ~ "Education",
@@ -40,12 +40,12 @@ dems.summ <- ma.all.df %>%
   bold_labels()
 
 if(FALSE){
-  dems.summ %>% as_flex_table() %>% 
+  dems.summ.tbl %>% as_flex_table() %>% 
     flextable::save_as_docx(path = "output/dems-table.docx")
 }
 
 #### Substance use characteristics ####
-substance.summ <- ma.all.df %>% 
+substance.summ.prep <- ma.all.df %>% 
   left_join(
     druguse.df %>% 
       filter(id %in% ma.id) %>% 
@@ -64,14 +64,22 @@ substance.summ <- ma.all.df %>%
          ma.use.peak = factor(ma.use.peak, levels = c("1 to 2 times per month",
                                                       "Weekly",
                                                       "Daily")),
-         ma.use.ways = factor(ma.use.ways, levels = c("Snorting", "Oral", "Smoking", "Injection"))) %>% 
-  tbl_summary(label = c(audit.risky ~ "Audit Use Disorder",
-                        other.drug ~ "Other Illicit Drug Use",
-                        severity.dependence ~ "Substance Dependence",
-                        ma.recent.use ~ "Last time using",
-                        ma.use.age ~ "Age of first use",
-                        ma.use.peak ~ "Frequency of use at peak",
-                        ma.use.ways ~ "Mode of use"),
+         ma.use.ways = factor(ma.use.ways, levels = c("Snorting", "Oral", "Smoking", "Injection")))
+
+
+substance.summ.tbl 
+
+substance.summ.prep %>% 
+  relocate(ma.use.age, audit.risky, ma.)
+  tbl_summary(label = c(audit.risky ~ "Alcochol Use Disorder",
+                        severity.dependence ~ "Substance Dependence Severity",
+                        ma.recent.use ~ "Last Meth Use",
+                        ma.use.age ~ "Age of First Use",
+                        ma.use.peak ~ "Frequency of Use at Peak",
+                        ma.use.ways ~ "Mode of use",
+                        other.drug ~ "Other Illicit Drug Use"),
+              
+              
               statistic = list(all_continuous() ~ c("{mean} ({sd}) [{min}-{max}]")
               )
   ) %>% bold_labels()

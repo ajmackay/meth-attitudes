@@ -140,7 +140,7 @@ audit.df <- survey.screened %>%
     ),
     audit.total = audit.freq + audit.typical + audit.six,
     audit.risky = ifelse((q13 == "Male" & audit.total > 2 | 
-                            q13 == "Female" & audit.total > 1), "TRUE", "FALSE"),
+                            q13 == "Female" & audit.total > 1), TRUE, FALSE),
     audit.full = !(id %in% alcohol.ids & is.na(audit.total)),
     audit.total = if_else(audit.full & is.na(audit.total), 0, audit.total))
 
