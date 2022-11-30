@@ -8,45 +8,7 @@ source("scripts/functions.R")
 
 load("objects/all-objects.RData")
 
-
-
-# Univariate Statistics ---------------------------------------------------
-uni.summ <- ma.final %>% 
-  select(age, audit.total:dd.total) %>% 
-  pivot_longer(cols = c(age:dd.total), names_to = "variable") %>% 
-  group_by(variable) %>% 
-  summarise(mean = mean(value))
-
-ma.final %>% 
-  select(id, age, audit.total:dd.total) %>% 
-  pivot_longer(cols = c(age:dd.total), names_to = "variable") %>% 
-  ggplot(aes(x = value)) +
-  geom_histogram(col = "black") +
-  facet_wrap(~variable, scales = "free", nrow = 2) +
-  geom_vline(data = uni.summ, aes(xintercept = mean), linetype = "dashed", col = "red")
-
-#### Correlation Matrix ####
-ma.final %>% 
-  select(where(is.numeric), -id) %>% 
-  ggpairs()
-
-#### Multicolinearity ####
-model <- lm(dd.total ~ sex + education + area.live +  age + audit.total + sds.total + k6.total + trait.total, data = ma.final)
-
-
-# Overall Multicolinearity Diagnostics
-omcdiag(model)
-
-# Individual Multicolinearity Diagnostics
-imcdiag(model)
-
-## No evidence of multicolinearity
-
-
-# Best Possible Subsets take 2 --------------------------------------------
-## So apparently 'leaps' only works with quantitative variables (so not good for our factors...)
-### The above may not be true - leaps just automatically converts the categorical variable into dummies so may not be all that bad rly...
-
+# Best Possible Subsets ---------------------------------------------------
 # Variables to include in model
 model.vars <- c(
   "age",
@@ -64,48 +26,29 @@ model.vars <- c(
 dummy.vars <- fastDummies::dummy_cols(ma.final, select_columns = "education") %>% 
   select(-c(id, education, dd.ne.total, dd.ad.total, dd.rd.total)) 
 
-# Model without dummy education then put into best subsets
-## UPDATE: lm() automatically converts factor into dummy
 model <- lm(dd.total ~ ., data = select(ma.final, model.vars))
-# model2 <- lm(dd.total ~ ., data = dummy.vars)
 
-# Final model
-# final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total, education)) # Automatically converts education to dummy
-final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total))
-
-
-final.model %>% gtsummary::tbl_regression()
-
-final.model %>% tidy(conf.int = TRUE) %>% mutate(across(where(is.numeric), ~round(.x, 2))) %>% 
-  write_csv("output/regression/final-model-coef-3vars.csv")
-
-
-
-
-summary(final.model)
-
-
-
-
-# Best Possible based on adj R2 -------------------------------------------
+# Best possible based on adj R2
 all.poss <- ols_step_all_possible(model)
+
 best.poss <- all.poss %>% 
   group_by(n) %>% 
   arrange(n, desc(adjr)) %>% 
   slice(1) %>% 
   select(n, predictors, rsquare, adjr, aic)
 
+## All 4 selection criteria
+# p.subset.selection <- all.poss %>% 
+#   group_by(n) %>% 
+#   arrange(n, desc(adjr)) %>% 
+#   slice(1) %>% 
+#   pivot_longer(cols = c(rsquare, adjr, aic, sbic), names_to = "measure") %>% 
+#   ggplot(aes(x = n, y = value)) +
+#   geom_point() +
+#   geom_line() +
+#   facet_wrap(~measure, scales = "free")
 
-p.subset.selection <- all.poss %>% 
-  group_by(n) %>% 
-  arrange(n, desc(adjr)) %>% 
-  slice(1) %>% 
-  pivot_longer(cols = c(rsquare, adjr, aic, sbic), names_to = "measure") %>% 
-  ggplot(aes(x = n, y = value)) +
-  geom_point() +
-  geom_line() +
-  facet_wrap(~measure, scales = "free")
-
+## Adjusted R2 and AIC
 p.subset.comparison <- all.poss %>% 
   group_by(n) %>% 
   arrange(n, desc(adjr)) %>% 
@@ -124,17 +67,14 @@ p.subset.comparison <- all.poss %>%
                `adjr` =  "Adjusted R2", 
                `aic` =  "AIC")))
 
+final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total))
 
-#### Effect Sizes (cannot do Cohen's f2 for categorical variables) ####
+#### Effect Sizes ####
 final.model.df <- ma.final %>% 
-  fastDummies::dummy_cols(select_columns = "education") %>%
-  select(dd.total, audit.total, sds.total, trait.total, starts_with("education_"))
+  select(dd.total, audit.total, sds.total, trait.total)
 
-lm.effect.size(final.model.df, iv = c("audit.total", "sds.total", "trait.total"), 
+final.mode.effects <- lm.effect.size(final.model.df, iv = c("audit.total", "sds.total", "trait.total"), 
                dv = "dd.total")
-
-
-
 
 
 # DDDI Subsets ------------------------------------------------------------
@@ -158,27 +98,28 @@ dd.subset.summ <- ma.final %>%
 #### Multivariate Regression ####
 lm.mv <- lm(cbind(dd.ad.total, dd.ne.total, dd.rd.total) ~ audit.total + sds.total + trait.total, data = ma.final)
 
-
-
+#### Plots ####
+if(FALSE){
+  
+##### Bar Chart with error bar #####
 ma.final %>% 
   pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
   group_by(dd.subscale) %>% 
   summarise(mean = mean(value),
             sd = sd(value),
-            se = sd/sqrt(n()),
-            lower = ) %>% 
+            se = sd/sqrt(n())) %>% 
   ggplot(aes(x = dd.subscale, y = mean, fill = dd.subscale)) +
   geom_bar(stat = "identity", color = "black",
            position = position_dodge()) +
   geom_errorbar(aes(ymin = mean - sd, ymax = mean+sd), width = .2)
 
-  
+##### Error bar #####
 ma.final %>% 
   pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
   ggplot(aes(x = dd.subscale, y = value, fill = dd.subscale)) +
   stat_summary(geom = "errorbar")
-  
-  
+
+}
 
 
 # Archive -----------------------------------------------------------------
@@ -330,3 +271,53 @@ final.model2 <- lm(dd.total ~ ., select(model.vars, dd.total, audit.total, sds.t
 #                                                        `education_Did not finish High School`,`education_Did not finish University`,
 #                                                        `education_Highschool/Technical Degree`, `education_University Degree`))
 # final.model.educ %>% tbl_regression()
+
+
+stop("not necessary")
+# Model without dummy education then put into best subsets
+## UPDATE: lm() automatically converts factor into dummy
+
+
+
+
+
+# final.model %>% gtsummary::tbl_regression()
+if(FALSE){
+  final.model %>% tidy(conf.int = TRUE) %>% mutate(across(where(is.numeric), ~round(.x, 2))) %>% 
+    write_csv("output/regression/final-model-coef-3vars.csv")
+}
+
+
+
+
+# Univariate Statistics ---------------------------------------------------
+uni.summ <- ma.final %>% 
+  select(age, audit.total:dd.total) %>% 
+  pivot_longer(cols = c(age:dd.total), names_to = "variable") %>% 
+  group_by(variable) %>% 
+  summarise(mean = mean(value))
+
+ma.final %>% 
+  select(id, age, audit.total:dd.total) %>% 
+  pivot_longer(cols = c(age:dd.total), names_to = "variable") %>% 
+  ggplot(aes(x = value)) +
+  geom_histogram(col = "black") +
+  facet_wrap(~variable, scales = "free", nrow = 2) +
+  geom_vline(data = uni.summ, aes(xintercept = mean), linetype = "dashed", col = "red")
+
+#### Correlation Matrix ####
+ma.final %>% 
+  select(where(is.numeric), -id) %>% 
+  ggpairs()
+
+#### Multicolinearity ####
+model <- lm(dd.total ~ sex + education + area.live +  age + audit.total + sds.total + k6.total + trait.total, data = ma.final)
+
+
+# Overall Multicolinearity Diagnostics
+omcdiag(model)
+
+# Individual Multicolinearity Diagnostics
+imcdiag(model)
+
+## No evidence of multicolinearity

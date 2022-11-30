@@ -37,7 +37,7 @@ hsize <- 4
 
 
 
-
+save.objects()
 
 
 stop("Do it manually you fool")

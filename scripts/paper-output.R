@@ -2,15 +2,22 @@ if(!"packages" %in% ls()){
   source("scripts/load-packages.R")
 }
 
+# If data is updated or significant changes made to script then source the scripts below
+# Otherwise just load all objects
+if(FALSE){
+source("scripts/data-processing.R")
+source("scripts/functions.R")
+source("scripts/analyses.R")
+source("scripts/output-prep.R")
+}
 load("objects/all-objects.RData")
+
 
 source("scripts/output-prep.R")
 
 
-# Tring this officer thing ------------------------------------------------
-output.doc <- read_docx()
 
-
+# Prep --------------------------------------------------------------------
 #### Demographics ####
 ma.all.df <- summ.df %>% 
   filter(id %in% ma.id) %>% 
@@ -119,21 +126,16 @@ if(FALSE){
 ggsave(p.subset,
        width = 10,
        height = 10,
-       units = "cm",
+       units = "in",
        filename = "output/tmp/subset.png")
 
 
-# camcorder::gg_record(dir = "output/tmp",
-#                      device = "png",
-#                      width = 8,
-#                      height = 5,
-#                      units = "in")
-# }
-
+}
 
 
 #### Regression Output ####
-final.model %>% tbl_regression()
+if(FALSE){
+# final.model %>% tbl_regression()
 
 final.model %>% tidy() %>% 
   mutate(p.value = if_else(p.value < .001, "<.001", as.character(round(p.value, 3))),
@@ -151,7 +153,7 @@ ma.final %>%
 best.poss %>% 
   mutate(across(where(is.numeric), ~round(.x, 2))) %>% 
   write_csv("output/regression output/best-models.csv")
-
+}
 
 #### DDDI Subscales ####
 ##### Errorbar #####
@@ -166,6 +168,7 @@ plt.error.subscale <- dd.subset.summ %>%
   )
 
 ##### Multivariate Regression #####
+# Needs Attention
 format.p <- function(p){
   if_else(p < .001, "<.001", as.character(round(p, 3)))
 }
@@ -180,6 +183,7 @@ lm.mv %>%
 
 
 # Output ------------------------------------------------------------------
+stop("Output ahead")
 output.doc <- read_docx()
 
 
@@ -187,12 +191,9 @@ output.doc <- body_add_flextable(output.doc,
                                  substance.summ.tbl)
 
 output.doc <- body_add_gg(output.doc, p.subset,
-                          height = 5,
-                          width = 8)
+                          height = 3,
+                          width = 6)
 
 
-if(FALSE){
-  print(output.doc, target = "output/tables-plots.docx")
-  
-}
+print(output.doc, target = "output/tables-plots.docx")
   
