@@ -107,9 +107,11 @@ if(FALSE){
 # plt.subset.selection +
 #   plot.theme
 
-p.subset <- p.subset.comparison +
+p.subset 
+
+p.subset.comparison +
+  theme_minimal() +
   labs(x = blank) +
-  theme_light()+
   theme(panel.background = blank,
         panel.grid.major.y = blank,
         panel.grid.minor = blank,
