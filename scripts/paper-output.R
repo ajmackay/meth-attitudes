@@ -46,6 +46,7 @@ theme.hist <-
 swin.red <- "#E4051F"
 .red <- "#d7191c"
 .blue <- "#2c7bb6"
+.black <- "#1A242F"
 
 hsize <- 4
 
@@ -96,7 +97,7 @@ p.dems <- dat %>%
             size = 3.5,
             hjust = -0.1,
             bg.colour = "white",
-            colour = "black",
+            colour = .black,
             bg.r = 0.2) +
   
   coord_flip() +
@@ -115,6 +116,7 @@ p.dems <- dat %>%
   theme(
     strip.text = element_text(size = 9,
                               face = "bold"),
+    axis.text = element_text(colour = .black),
     
     panel.grid.major = blank,
     panel.grid.minor = blank,
@@ -122,6 +124,11 @@ p.dems <- dat %>%
     axis.text.x = blank
   )
 
+if(FALSE){
+  p.dems %>% ggsave(filename = "output/dems-plot.png",
+         height = 5,
+         width = 7)
+}
 
 
 group_by(sex) %>% 
@@ -271,25 +278,27 @@ if(export.all){
 
 output.doc <- read_docx()
 
-
+# Substance Summary Table
 output.doc <- body_add_flextable(output.doc,
                                  substance.summ.tbl)
 
+# Subset Regression Plot
 output.doc <- body_add_gg(output.doc, p.subset,
                           height = 4,
                           width = 7)
 
+# Demographic Plot
 output.doc <- body_add_gg(output.doc, p.dems,
                           height = 5,
-                          width = 8)
+                          width = 7,
+                          res = 300)
 
 
 print(output.doc, target = "output/tables-plots.docx")
 
 }
 
-
-# Archive -----------------------------------------------------------------
+x# Archive -----------------------------------------------------------------
 
 #### NA: Demographic summary Table ####
 dems.summ.tbl <- ma.all.df %>% 
