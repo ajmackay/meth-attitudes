@@ -1,3 +1,10 @@
+#### Stop Quietly ####
+stop_quietly <- function() {
+  opt <- options(show.error.messages = FALSE)
+  on.exit(options(opt))
+  stop()
+}
+
 #### Margin of error calculator ####
 margin.error <- function(level = 0.975, sd, n){
   # browser()

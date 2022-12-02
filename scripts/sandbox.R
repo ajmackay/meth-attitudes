@@ -1,5 +1,7 @@
-library(broom)
-tidy(final.model, conf.int = TRUE)
+fontname <- "Times New Roman"
+
+
+
 
 
 final.model2 <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total)) # Automatically converts education to dummy

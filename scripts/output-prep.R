@@ -40,7 +40,7 @@ hsize <- 4
 save.objects()
 
 
-stop("Do it manually you fool")
+stop_quietly()
 # Demographic charts ------------------------------------------------------
 # sds, peak use,
 p.age <- ma.final %>% 

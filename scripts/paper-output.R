@@ -2,33 +2,64 @@ if(!"packages" %in% ls()){
   source("scripts/load-packages.R")
 }
 
+require("gdtools") # For font name
+
 # If data is updated or significant changes made to script then source the scripts below
 # Otherwise just load all objects
 if(FALSE){
-source("scripts/data-processing.R")
-source("scripts/functions.R")
-source("scripts/analyses.R")
-source("scripts/output-prep.R")
+  source("scripts/functions.R")
+  source("scripts/data-processing.R")
+  source("scripts/analyses.R") # TODO: stop script without stopping program
+  source("scripts/output-prep.R")
 }
+
 load("objects/all-objects.RData")
 
 
-source("scripts/output-prep.R")
-
-
-
 # Prep --------------------------------------------------------------------
-#### Demographics ####
+## Font for flextables
+fontname <- "Calibri"
+
+blank <- element_blank()
+
+plot.theme <- theme_classic() +
+  theme(
+    title = element_text(size = 12)
+    # axis.text.x = element_text()
+    # legend.title = element_text("none")
+  )
+
+theme.blank <- theme(
+  axis.text.x = blank,
+  axis.text.y = blank,
+  axis.line = blank,
+  axis.ticks = blank
+)
+
+theme.hist <-
+  theme(
+    axis.line = blank,
+    axis.text.y = blank,
+    axis.ticks.y = blank
+  )
+
+swin.red <- "#E4051F"
+.red <- "#d7191c"
+.blue <- "#2c7bb6"
+
+hsize <- 4
+
+#### Demographic table prep ####
 ma.all.df <- summ.df %>% 
   filter(id %in% ma.id) %>% 
   mutate(sex = factor(sex, levels = c("Male", "Female")),
-         audit.risky = replace_na(audit.risky, FALSE)) 
+         audit.risky = replace_na(audit.risky, FALSE))
 
-dems.summ.tbl <- ma.all.df %>% 
-  select(sex, age, education, employment.status, psychiatric.diagnosis) %>% 
-  mutate(psychiatric.diagnosis = !is.na(psychiatric.diagnosis),
-         
-         # Ordering factor variables
+# Outputs -----------------------------------------------------------------
+#### Demographic Plots ####
+##### Bar Plots #####
+dat <- ma.all.df %>% 
+  mutate(# Ordering factor variables
          education = factor(education, c("Did not finish High School",
                                          "Did not finish University",
                                          "Highschool/Technical Degree",
@@ -39,24 +70,68 @@ dems.summ.tbl <- ma.all.df %>%
          
          employment.status = factor(employment.status, c("Student",
                                                          "Homemaker",
+                                                         "Unemployed",
                                                          "Employed part time",
-                                                         "Employed full time",
-                                                         "Unemployed"))) %>% 
-  
-  tbl_summary(label = c(sex ~ "Sex",
-                        age ~ "Age",
-                        education ~ "Education",
-                        employment.status ~ "Employment Status",
-                        psychiatric.diagnosis ~ "Any Psychiatric Diagnosis"),
-              statistic = all_continuous() ~ c("{mean} ({sd}) [{min}-{max}]")) %>% 
-  bold_labels()
+                                                         "Employed full time"))) %>% 
+  select(id, sex, area.live, education, employment.status) %>% 
+  pivot_longer(cols = -id, names_to = "variable") %>% 
+  group_by(variable) %>% 
+  count(value) %>% 
+  mutate(p = round(n / sum(n) * 100, 2))
 
-if(FALSE){
-  dems.summ.tbl %>% as_flex_table() %>% 
-    flextable::save_as_docx(path = "output/dems-table.docx")
-}
+p.dems <- dat %>% 
+  ggplot(aes(x = value, y = p, group = 1)) +
+  geom_col(width = 0.6) +
+  
+  # Numbers for p > 10 (for formatting reasons)
+  geom_text(data = filter(dat, p > 10),
+            aes(label = str_c(round(p, 1), "%")), 
+            size = 3.5, 
+            hjust = 1,
+            color = "white") +
+  
+  # Numbers for p <= 10 placed on the right side of chart
+  geom_shadowtext(data = filter(dat, p <= 10),
+            aes(label = str_c(round(p, 1), "%")),
+            size = 3.5,
+            hjust = -0.1,
+            bg.colour = "white",
+            colour = "black",
+            bg.r = 0.2) +
+  
+  coord_flip() +
+  
+  facet_wrap(variable ~., scales = "free",
+             labeller = as_labeller(c(
+               `area.live` = "Residential Area",
+               `education` = "Education",
+               `employment.status` = "Employment Status",
+               `sex` = "Sex"
+             ))) +
+  
+  labs(x = blank, y = blank) +
+  
+  theme_minimal(base_size = 10) +
+  theme(
+    strip.text = element_text(size = 9,
+                              face = "bold"),
+    
+    panel.grid.major = blank,
+    panel.grid.minor = blank,
+    
+    axis.text.x = blank
+  )
+
+
+
+group_by(sex) %>% 
+  count(education) %>% 
+  mutate(p = round(n / sum(n) * 100, 2)) %>% 
+  ggplot(aes(x = education, y = p, group = 1)) +
+  geom_col()
 
 #### Substance use characteristics ####
+##### Prep #####
 substance.summ.prep <- ma.all.df %>% 
   left_join(
     druguse.df %>% 
@@ -78,7 +153,7 @@ substance.summ.prep <- ma.all.df %>%
                                                       "Daily")),
          ma.use.ways = factor(ma.use.ways, levels = c("Snorting", "Oral", "Smoking", "Injection")))
 
-
+##### Table #####
 substance.summ.tbl <- substance.summ.prep %>% 
   relocate(ma.use.age, audit.risky, ma.use.peak, ma.recent.use, ma.use.ways,
            other.drug, severity.dependence) %>% 
@@ -90,11 +165,18 @@ substance.summ.tbl <- substance.summ.prep %>%
                         ma.use.ways ~ "Mode of Use",
                         other.drug ~ "Other Illicit Drug Use"),
               
-              
+              type = all_continuous() ~ "continuous2",
               statistic = list(all_continuous() ~ c("{mean} ({sd}) [{min}-{max}]")
               )
-  ) %>% bold_labels() %>% 
-  as_flex_table()
+  ) %>% 
+  bold_labels() %>% 
+  modify_footnote(update = everything() ~ NA) %>%  # Remove footnote
+  
+  as_flex_table() %>% 
+  fontsize(size = 10, part = "all") %>% 
+  fontsize(size = 9, part = "footer") %>% 
+  font(fontname = fontname)
+  
 
 if(FALSE){
   substance.summ.tbl %>% 
@@ -104,18 +186,14 @@ if(FALSE){
 
 
 #### Best Subsets selection ####
-# plt.subset.selection +
-#   plot.theme
-
-p.subset 
-
-p.subset.comparison +
+##### Plot #####
+p.subset <- p.subset.comparison +
   theme_minimal() +
   labs(x = blank) +
   theme(panel.background = blank,
-        panel.grid.major.y = blank,
-        panel.grid.minor = blank,
-        panel.grid.major.x = element_line(),
+        panel.grid.major.y = element_line(),
+        panel.grid.minor.y = element_line(),
+        panel.grid.major.x = blank,
         panel.grid.minor.x = blank,
         
         strip.background = element_rect(fill = "white",
@@ -184,8 +262,13 @@ lm.mv %>%
          )
 
 
-# Output ------------------------------------------------------------------
-stop("Output ahead")
+
+# Exporting ---------------------------------------------------------------
+#### TODO: Table captions with numbers ####
+export.all <- TRUE
+
+if(export.all){
+
 output.doc <- read_docx()
 
 
@@ -193,9 +276,50 @@ output.doc <- body_add_flextable(output.doc,
                                  substance.summ.tbl)
 
 output.doc <- body_add_gg(output.doc, p.subset,
-                          height = 3,
-                          width = 6)
+                          height = 4,
+                          width = 7)
+
+output.doc <- body_add_gg(output.doc, p.dems,
+                          height = 5,
+                          width = 8)
 
 
 print(output.doc, target = "output/tables-plots.docx")
+
+}
+
+
+# Archive -----------------------------------------------------------------
+
+#### NA: Demographic summary Table ####
+dems.summ.tbl <- ma.all.df %>% 
+  select(sex, age, education, employment.status, psychiatric.diagnosis) %>% 
+  mutate(psychiatric.diagnosis = !is.na(psychiatric.diagnosis),
+         
+         # Ordering factor variables
+         education = factor(education, c("Did not finish High School",
+                                         "Did not finish University",
+                                         "Highschool/Technical Degree",
+                                         "University Degree")),
+         employment.status = fct_collapse(employment.status,
+                                          Unemployed = c("Unemployed looking for work",
+                                                         "Unemployed not looking for work")),
+         
+         employment.status = factor(employment.status, c("Student",
+                                                         "Homemaker",
+                                                         "Employed part time",
+                                                         "Employed full time",
+                                                         "Unemployed"))) %>% 
   
+  tbl_summary(label = c(sex ~ "Sex",
+                        age ~ "Age",
+                        education ~ "Education",
+                        employment.status ~ "Employment Status",
+                        psychiatric.diagnosis ~ "Any Psychiatric Diagnosis"),
+              statistic = all_continuous() ~ c("{mean} ({sd}) [{min}-{max}]")) %>% 
+  bold_labels()
+
+if(FALSE){
+  dems.summ.tbl %>% as_flex_table() %>% 
+    flextable::save_as_docx(path = "output/dems-table.docx")
+}

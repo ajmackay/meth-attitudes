@@ -114,16 +114,19 @@ ma.final %>%
   geom_errorbar(aes(ymin = mean - sd, ymax = mean+sd), width = .2)
 
 ##### Error bar #####
-ma.final %>% 
-  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
-  ggplot(aes(x = dd.subscale, y = value, fill = dd.subscale)) +
-  stat_summary(geom = "errorbar")
-
+# ma.final %>% 
+#   pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
+#   ggplot(aes(x = dd.subscale, y = value, fill = dd.subscale)) +
+#   stat_summary(geom = "errorbar")
+# 
 }
 
 
 # Archive -----------------------------------------------------------------
-stop("Archive Ahead")
+stop_quietly()
+
+
+  
 # Best subsets regression (selects based on highest R2 value)
 bs <- ols_step_best_subset(model)
 

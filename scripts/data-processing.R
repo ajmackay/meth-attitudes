@@ -1,4 +1,4 @@
-source("scripts/load-packages.R")
+# source("scripts/load-packages.R")
 
 
 # Import ------------------------------------------------------------------
@@ -139,8 +139,8 @@ audit.df <- survey.screened %>%
                                                    "4" = "Four or more times a week"))
     ),
     audit.total = audit.freq + audit.typical + audit.six,
-    audit.risky = ifelse((q13 == "Male" & audit.total > 2 | 
-                            q13 == "Female" & audit.total > 1), TRUE, FALSE),
+    audit.risky = ifelse((q13 == "Male" & audit.total > 4 | 
+                            q13 == "Female" & audit.total > 2), TRUE, FALSE), # https://www.hepatitis.va.gov/alcohol/treatment/audit-c.asp (also see protocol)
     audit.full = !(id %in% alcohol.ids & is.na(audit.total)),
     audit.total = if_else(audit.full & is.na(audit.total), 0, audit.total))
 
