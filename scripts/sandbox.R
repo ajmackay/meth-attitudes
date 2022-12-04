@@ -1,3 +1,51 @@
+# Model including state anger ---------------------------------------------
+model.vars2 <- c(
+  "age",
+  "sex",
+  "education",
+  "area.live",
+  "audit.total",
+  "sds.total",
+  "k6.total",
+  "trait.total",
+  "state.total",
+  "dd.total"
+)
+
+#### Using dummy variables for education ####
+model <- lm(dd.total ~ ., data = select(ma.final, model.vars2))
+
+# Best possible based on adj R2
+all.poss <- ols_step_all_possible(model)
+
+best.poss <- all.poss %>% 
+  group_by(n) %>% 
+  arrange(n, desc(adjr)) %>% 
+  slice(1) %>% 
+  select(n, predictors, rsquare, adjr, aic)
+
+all.poss %>% 
+  group_by(n) %>% 
+  arrange(n, desc(adjr)) %>% 
+  slice(1) %>% 
+  pivot_longer(cols = c(adjr, aic), names_to = "measure") %>% 
+  
+  ggplot(aes(x = n, y = value)) +
+  geom_point(size = 2) +
+  geom_line() +
+  
+  scale_x_continuous(breaks = seq(1, 8)) +
+  labs(y = element_blank(),
+       x = "N") +
+  
+  facet_wrap(~measure, scales = "free", ncol = 2,
+             labeller = as_labeller(c(
+               `adjr` =  "Adjusted R2", 
+               `aic` =  "AIC")))
+
+
+
+
 fontname <- "Times New Roman"
 
 

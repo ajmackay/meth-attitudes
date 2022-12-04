@@ -19,12 +19,13 @@ model.vars <- c(
   "sds.total",
   "k6.total",
   "trait.total",
+  "state.total",
   "dd.total"
 )
 
 #### Using dummy variables for education ####
-dummy.vars <- fastDummies::dummy_cols(ma.final, select_columns = "education") %>% 
-  select(-c(id, education, dd.ne.total, dd.ad.total, dd.rd.total)) 
+# dummy.vars <- fastDummies::dummy_cols(ma.final, select_columns = "education") %>% 
+#   select(-c(id, education, dd.ne.total, dd.ad.total, dd.rd.total)) 
 
 model <- lm(dd.total ~ ., data = select(ma.final, model.vars))
 
@@ -49,11 +50,9 @@ best.poss <- all.poss %>%
 #   facet_wrap(~measure, scales = "free")
 
 ## Adjusted R2 and AIC
-p.subset.comparison <- all.poss %>% 
-  group_by(n) %>% 
-  arrange(n, desc(adjr)) %>% 
-  slice(1) %>% 
+p.subset.comparison <- best.poss %>% 
   pivot_longer(cols = c(adjr, aic), names_to = "measure") %>% 
+  
   ggplot(aes(x = n, y = value)) +
   geom_point(size = 2) +
   geom_line() +
@@ -67,13 +66,13 @@ p.subset.comparison <- all.poss %>%
                `adjr` =  "Adjusted R2", 
                `aic` =  "AIC")))
 
-final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total))
+final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, state.total, sds.total, audit.total))
 
 #### Effect Sizes ####
 final.model.df <- ma.final %>% 
-  select(dd.total, audit.total, sds.total, trait.total)
+  select(dd.total, audit.total, sds.total, trait.total, state.total)
 
-final.mode.effects <- lm.effect.size(final.model.df, iv = c("audit.total", "sds.total", "trait.total"), 
+final.model.effects <- lm.effect.size(final.model.df, iv = c("audit.total", "sds.total", "trait.total", "state.total"), 
                dv = "dd.total")
 
 
@@ -122,8 +121,31 @@ ma.final %>%
 }
 
 
+# Assumptions -------------------------------------------------------------
+#### Multicolinearity ####
+# Correlation matrix
+if(FALSE){
+ma.final %>% 
+  select(names(final.model.df)) %>% 
+  ggpairs()
+}
+
+#### Multicolinearity ####
+model <- lm(dd.total ~ ., data = final.model.df)
+
+
+# Overall Multicolinearity Diagnostics
+mctest::omcdiag(model)
+
+# Individual Multicolinearity Diagnostics
+mctest::imcdiag(model)
+
+save.objects()
+
+
 # Archive -----------------------------------------------------------------
-stop_quietly()
+# stop_quietly()
+stop("Run next script again")
 
 
   
@@ -314,7 +336,7 @@ ma.final %>%
   ggpairs()
 
 #### Multicolinearity ####
-model <- lm(dd.total ~ sex + education + area.live +  age + audit.total + sds.total + k6.total + trait.total, data = ma.final)
+model <- lm(dd.total ~ ., data = select(ma.final, ma.vars))
 
 
 # Overall Multicolinearity Diagnostics

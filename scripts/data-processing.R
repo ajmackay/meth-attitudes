@@ -139,8 +139,8 @@ audit.df <- survey.screened %>%
                                                    "4" = "Four or more times a week"))
     ),
     audit.total = audit.freq + audit.typical + audit.six,
-    audit.risky = ifelse((q13 == "Male" & audit.total > 4 | 
-                            q13 == "Female" & audit.total > 2), TRUE, FALSE), # https://www.hepatitis.va.gov/alcohol/treatment/audit-c.asp (also see protocol)
+    audit.risky = ifelse((q13 == "Male" & audit.total >= 4 | 
+                            q13 == "Female" & audit.total >= 3), TRUE, FALSE), # https://www.hepatitis.va.gov/alcohol/treatment/audit-c.asp (also see protocol)
     audit.full = !(id %in% alcohol.ids & is.na(audit.total)),
     audit.total = if_else(audit.full & is.na(audit.total), 0, audit.total))
 
@@ -781,6 +781,7 @@ ma.id <- summ.df %>%
          sds.full,
          k6.full,
          trait.full,
+         state.full,
          dd.full,
          # dui.strat.full,
          # duid.strat.full,
@@ -792,7 +793,7 @@ ma.id <- summ.df %>%
 ma.final <- summ.df %>% 
   filter(id %in% ma.id) %>% 
   select(id, age, sex, education, area.live,
-         audit.total, sds.total, k6.total, trait.total, 
+         audit.total, sds.total, k6.total, trait.total, state.total, 
          dd.ne.total, dd.ad.total, dd.rd.total, dd.total)
 
 ma.final <- ma.final %>% 

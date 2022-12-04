@@ -10,7 +10,7 @@ if(FALSE){
   source("scripts/functions.R")
   source("scripts/data-processing.R")
   source("scripts/analyses.R") # TODO: stop script without stopping program
-  source("scripts/output-prep.R")
+  # source("scripts/output-prep.R")
 }
 
 load("objects/all-objects.RData")
@@ -49,6 +49,7 @@ swin.red <- "#E4051F"
 .black <- "#1A242F"
 
 hsize <- 4
+
 
 #### Demographic table prep ####
 ma.all.df <- summ.df %>% 
@@ -131,11 +132,7 @@ if(FALSE){
 }
 
 
-group_by(sex) %>% 
-  count(education) %>% 
-  mutate(p = round(n / sum(n) * 100, 2)) %>% 
-  ggplot(aes(x = education, y = p, group = 1)) +
-  geom_col()
+
 
 #### Substance use characteristics ####
 ##### Prep #####
@@ -211,36 +208,113 @@ p.subset <- p.subset.comparison +
 # Save plot
 if(FALSE){
 ggsave(p.subset,
-       width = 10,
-       height = 10,
+       width = 7,
+       height = 4,
        units = "in",
        filename = "output/tmp/subset.png")
 
 
 }
 
+##### Best Possible Models #####
+ft.best.poss <- best.poss %>% 
+  mutate(across(where(is.numeric), ~round(.x, 2)),
+         
+         predictors = str_replace_all(predictors, "trait.total", "Trait Anger"),
+         predictors = str_replace_all(predictors, "state.total", "State Anger"),
+         predictors = str_replace_all(predictors, "audit.total", "Alcohol Use"),
+         predictors = str_replace_all(predictors, "area.live", "Residential Area"),
+         predictors = str_replace_all(predictors, "sds.total", "Methamphetamine Dependence"),
+         predictors = str_replace_all(predictors, "age", "Age"),
+         predictors = str_replace_all(predictors, "sex", "Sex"),
+         predictors = str_replace_all(predictors, "education", "Education"),
+         predictors = str_replace_all(predictors, "k6.total", "Psychological Distress")
+         
+  ) %>% 
+  flextable() %>% 
+  set_header_labels(n = "N",
+                    predictors = "Predictors",
+                    rsquare = "R2",
+                    adjr = "Adj R2",
+                    aic = "AIC") %>% 
+  fontsize(size = 10, part = "all") %>% 
+  font(fontname = fontname)
+
+
+
 
 #### Regression Output ####
-if(FALSE){
+
 # final.model %>% tbl_regression()
 
-final.model %>% tidy() %>% 
+##### Prep #####
+final.model.ci <- confint(final.model) %>% as_tibble() %>% 
+    mutate(CI = str_c(round(`2.5 %`, 2), " - ", round(`97.5 %`, 2)))
+
+# Model parameters
+model.params = list(
+  f.stat = round(glance(final.model)$statistic, 2),
+  
+  dfs = str_c("(", glance(final.model)$df, ", ", glance(final.model)$df.residual, ")"),
+  
+  p.value = round(glance(final.model)$p.value, 3),
+  
+  r2 = round(glance(final.model)$r.squared, 2),
+  
+  adjr = round(glance(final.model)$adj.r.squared, 2),
+  
+  aic = round(glance(final.model)$AIC, 2)
+
+)
+
+
+##### Final Model Table #####
+ft.regression <- final.model %>% tidy() %>% 
   mutate(p.value = if_else(p.value < .001, "<.001", as.character(round(p.value, 3))),
-         across(where(is.numeric), ~round(.x, 2)),
-         CI = confint(final.model)) 
-write_csv("output/regression output/basic-regress.csv")
+         CI = final.model.ci$CI) %>% 
+  
+  left_join(final.model.effects, by = c("term" = "Variable")) %>% 
+  select(term, Estimate = estimate, CI, Partial, F2, p = p.value) %>% 
+  mutate(across(where(is.numeric), ~round(.x, 2)),
+         Estimate = as.character(Estimate)) %>% 
+  
+  add_row(
+    tibble(term = 
+             c("", "F", "df", "p", "R2", "Adj R2", "AIC"),
+           Estimate = 
+             c("", model.params$f.stat, model.params$dfs, model.params$p.value,
+               model.params$r2, model.params$adjr, model.params$aic
+               
+             ))
+  ) %>% write_csv("output/regression/2022-12-04_final-model.csv")
+  
+  flextable() %>% 
+  # add_footer_lines(str_c("AIC: ", round(AIC(final.model), 2))) %>% 
+  
+  bold(part = "header") %>% 
+  
+  fontsize(size = 10, part = "all") %>% 
+  font(fontname = fontname)
+
+
+
+
+
+       
+    
+
+
+
 
 ma.final %>% 
   select(dd.total, trait.total, sds.total, audit.total) %>% 
   lm.effect.size(dv = "dd.total", iv = c("trait.total", "sds.total", "audit.total")) %>% 
-  mutate(across(where(is.numeric), ~round(.x, 3))) %>% 
+  mutate(across(where(is.numeric), ~round(.x, 3)))
   write_csv("output/regression output/cohens-f.csv")
 
 
-best.poss %>% 
-  mutate(across(where(is.numeric), ~round(.x, 2))) %>% 
-  write_csv("output/regression output/best-models.csv")
-}
+
+
 
 #### DDDI Subscales ####
 ##### Errorbar #####
@@ -293,12 +367,41 @@ output.doc <- body_add_gg(output.doc, p.dems,
                           width = 7,
                           res = 300)
 
+# Best Possible Subset Models
+output.doc <- body_add_flextable(output.doc,
+                                 ft.best.poss)
 
-print(output.doc, target = "output/tables-plots.docx")
+# Regression Model
+output.doc <- body_add_flextable(output.doc,
+                                 ft.regression)
+
+
+
+print(output.doc, target = "output/tables-plots2.docx")
 
 }
 
-x# Archive -----------------------------------------------------------------
+flextable::csv
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Archive -----------------------------------------------------------------
 
 #### NA: Demographic summary Table ####
 dems.summ.tbl <- ma.all.df %>% 

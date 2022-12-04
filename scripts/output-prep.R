@@ -1,6 +1,3 @@
-
-
-
 # Setup -------------------------------------------------------------------
 blank <- element_blank()
 
@@ -36,8 +33,6 @@ hsize <- 4
 
 
 
-
-save.objects()
 
 
 stop_quietly()
