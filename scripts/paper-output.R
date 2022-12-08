@@ -217,7 +217,9 @@ ggsave(p.subset,
 }
 
 ##### Best Possible Models #####
-ft.best.poss <- best.poss %>% 
+ft.best.poss 
+
+best.poss %>% 
   mutate(across(where(is.numeric), ~round(.x, 2)),
          
          predictors = str_replace_all(predictors, "trait.total", "Trait Anger"),
@@ -230,7 +232,7 @@ ft.best.poss <- best.poss %>%
          predictors = str_replace_all(predictors, "education", "Education"),
          predictors = str_replace_all(predictors, "k6.total", "Psychological Distress")
          
-  ) %>% 
+  ) %>% write_csv("output/regression/2022-12-05_best-subsets-models.csv")
   flextable() %>% 
   set_header_labels(n = "N",
                     predictors = "Predictors",

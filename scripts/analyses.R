@@ -19,7 +19,7 @@ model.vars <- c(
   "sds.total",
   "k6.total",
   "trait.total",
-  "state.total",
+  # "state.total",
   "dd.total"
 )
 
@@ -27,7 +27,7 @@ model.vars <- c(
 # dummy.vars <- fastDummies::dummy_cols(ma.final, select_columns = "education") %>% 
 #   select(-c(id, education, dd.ne.total, dd.ad.total, dd.rd.total)) 
 
-model <- lm(dd.total ~ ., data = select(ma.final, model.vars))
+model <- lm(dd.total ~ ., data = select(ma.final, all_of(model.vars)))
 
 # Best possible based on adj R2
 all.poss <- ols_step_all_possible(model)
@@ -66,13 +66,13 @@ p.subset.comparison <- best.poss %>%
                `adjr` =  "Adjusted R2", 
                `aic` =  "AIC")))
 
-final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, state.total, sds.total, audit.total))
+final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total))
 
 #### Effect Sizes ####
 final.model.df <- ma.final %>% 
-  select(dd.total, audit.total, sds.total, trait.total, state.total)
+  select(dd.total, audit.total, sds.total, trait.total)
 
-final.model.effects <- lm.effect.size(final.model.df, iv = c("audit.total", "sds.total", "trait.total", "state.total"), 
+final.model.effects <- lm.effect.size(final.model.df, iv = c("audit.total", "sds.total", "trait.total"), 
                dv = "dd.total")
 
 
@@ -93,12 +93,25 @@ dd.subset.summ <- ma.final %>%
 
 
 # Assess difference between subsets means
+#### ANOVA ####
+n <- nrow(ma.final)
+
+ma.final %>% 
+  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
+  group_by(dd.subscale) %>% 
+  summarise(mean = mean(value),
+            sd = sd(value),
+            se = sd/sqrt(n()),
+            error = qt(0.975, df = n - 1) * se,
+            lower = mean - error,
+            upper = mean + error) 
+
 
 #### Multivariate Regression ####
 lm.mv <- lm(cbind(dd.ad.total, dd.ne.total, dd.rd.total) ~ audit.total + sds.total + trait.total, data = ma.final)
 
 #### Plots ####
-if(FALSE){
+
   
 ##### Bar Chart with error bar #####
 ma.final %>% 
@@ -113,12 +126,15 @@ ma.final %>%
   geom_errorbar(aes(ymin = mean - sd, ymax = mean+sd), width = .2)
 
 ##### Error bar #####
-# ma.final %>% 
-#   pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
-#   ggplot(aes(x = dd.subscale, y = value, fill = dd.subscale)) +
-#   stat_summary(geom = "errorbar")
+ma.final %>%
+  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>%
+  ggplot(aes(x = dd.subscale, y = value, fill = dd.subscale)) +
+  stat_summary(geom = "errorbar", ) +
+  scale_y_continuous(breaks = seq(10, 30, 1))
+
+
 # 
-}
+
 
 
 # Assumptions -------------------------------------------------------------

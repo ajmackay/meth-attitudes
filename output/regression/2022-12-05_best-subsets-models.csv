@@ -1,0 +1,9 @@
+n,predictors,rsquare,adjr,aic
+1,Trait Anger,0.42,0.41,618.21
+2,Alcohol Use Trait Anger,0.48,0.47,610.72
+3,Alcohol Use Methamphetamine Dependence Trait Anger,0.52,0.5,607.47
+4,Education Alcohol Use Methamphetamine Dependence Trait Anger,0.55,0.51,608.31
+5,Education Residential Area Alcohol Use Methamphetamine Dependence Trait Anger,0.55,0.51,609.74
+6,Education Residential Area Alcohol Use Methamphetamine Dependence Psychological Distress Trait Anger,0.55,0.5,611.42
+7,Sex Education Residential Area Alcohol Use Methamphetamine Dependence Psychological Distress Trait Anger,0.55,0.49,613.3
+8,Age Sex Education Residential Area Alcohol Use Methamphetamine Dependence Psychological Distress Trait Anger,0.55,0.49,615.28
