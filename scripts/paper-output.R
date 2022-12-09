@@ -50,6 +50,9 @@ swin.red <- "#E4051F"
 
 hsize <- 4
 
+pal.cfh <- c("#0b0b16", "#353454", "#171733", "#0a0a15", "#a9a1f1")
+pal <- c("#d5d6ed", "#161639", "#b8c35d", "#332c72", "#c4c88a")
+
 
 #### Demographic table prep ####
 ma.all.df <- summ.df %>% 
@@ -290,20 +293,13 @@ ft.regression <- final.model %>% tidy() %>%
              ))
   ) %>% write_csv("output/regression/2022-12-04_final-model.csv")
   
-  flextable() %>% 
-  # add_footer_lines(str_c("AIC: ", round(AIC(final.model), 2))) %>% 
-  
-  bold(part = "header") %>% 
-  
-  fontsize(size = 10, part = "all") %>% 
-  font(fontname = fontname)
-
-
-
-
-
-       
-    
+  # flextable() %>% 
+  # # add_footer_lines(str_c("AIC: ", round(AIC(final.model), 2))) %>% 
+  # 
+  # bold(part = "header") %>% 
+  # 
+  # fontsize(size = 10, part = "all") %>% 
+  # font(fontname = fontname)
 
 
 
@@ -311,24 +307,64 @@ ft.regression <- final.model %>% tidy() %>%
 ma.final %>% 
   select(dd.total, trait.total, sds.total, audit.total) %>% 
   lm.effect.size(dv = "dd.total", iv = c("trait.total", "sds.total", "audit.total")) %>% 
-  mutate(across(where(is.numeric), ~round(.x, 3)))
-  write_csv("output/regression output/cohens-f.csv")
+  mutate(across(where(is.numeric), ~round(.x, 3))) %>% identity()
+  # write_csv("output/regression output/cohens-f.csv")
+
 
 
 
 
 
 #### DDDI Subscales ####
-##### Errorbar #####
-plt.error.subscale <- dd.subset.summ %>% 
-  ggplot(aes(x = dd.subscale, y = mean)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = lower, ymax = upper)) +
-  plot.theme +
+##### ANOVA #####
+get_anova_table(m.anova, correction = "none") %>% 
+  format.p() %>% 
+  flextable()
+
+
+##### Boxplot #####
+##### TODO: Make prettier (violin plot?) #####
+plt.subscales <- p.subscales + 
+  # geom_jitter(width = .1)
+  
+  scale_x_discrete(labels = c("Agressive Driving", "Negative Emotional Driving", "Risky Driving")) +
+  
+  labs(x = blank, y = blank) +
+  
+  theme_minimal() +
+  
   theme(
-    panel.grid.major.y = element_line(),
-    panel.grid.minor.y = element_line()
-  )
+    panel.grid.major.x = blank,
+    axis.text.x = element_text(colour = "black", face = "bold", size = 9))
+
+if(FALSE){
+  ggsave(plt.subscales,
+         width = 7,
+         height = 5,
+         units = "in",
+         filename = "output/anova/subscales.png")
+}
+
+
+# Alternatives
+if(FALSE){
+summ.dd.subscale %>% 
+  ggplot(aes(x = dd.subscale, y = mean, fill = dd.subscale)) +
+  geom_bar(stat = "identity", color = "black",
+           position = position_dodge()) +
+  geom_errorbar(aes(ymin = mean - ci, ymax = mean + ci), width = .2) +
+  
+  scale_fill_manual(values = pal) +
+  
+  theme_minimal()
+
+subscales.df %>% 
+  ggplot(aes(x = dd.subscale, y = value, fill = dd.subscale)) +
+  geom_boxplot(outlier.alpha = 0) +
+  geom_jitter(width = .1)
+  
+  
+
 
 ##### Multivariate Regression #####
 # Needs Attention

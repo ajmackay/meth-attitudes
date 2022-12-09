@@ -1,3 +1,16 @@
+#### Format p ####
+format.p <- function(dat){
+  if(!any(str_detect(class(dat), "tbl"))){
+    
+    as_tibble(dat) %>% 
+      mutate(p = scales::pvalue(p))
+  }
+}
+
+format.p(anova.tbl)
+
+any(str_detect(class(anova.tbl), "data.frame"))
+
 #### Stop Quietly ####
 stop_quietly <- function() {
   opt <- options(show.error.messages = FALSE)

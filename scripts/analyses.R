@@ -77,24 +77,69 @@ final.model.effects <- lm.effect.size(final.model.df, iv = c("audit.total", "sds
 
 
 # DDDI Subsets ------------------------------------------------------------
-dd.subset.summ <- ma.final %>% 
+subscales.df <- ma.final %>% 
+  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
+  select(id, dd.subscale, value)
+
+summ.dd.subscale <- ma.final %>% 
   pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
   group_by(dd.subscale) %>% 
-  summarise(mean = mean(value),
-            median = median(value),
-            sd = sd(value),
-            n = n(),
-            error = margin.error(sd = sd, n = n),
-            lower = mean - error,
-            upper = mean + error) %>% 
-  ungroup()
-
-
+  get_summary_stats(value, type = "mean_ci") %>% 
+  mutate(lower = mean - ci,
+         upper = mean + ci)
+  # summarise(mean = mean(value),
+  #           sd = sd(value),
+  #           se = sd/sqrt(n()),
+  #           error = qt(0.975, df = n() - 1) * se,
+  #           lower = mean - error,
+  #           upper = mean + error)
 
 
 # Assess difference between subsets means
 #### ANOVA ####
-n <- nrow(ma.final)
+m.anova <- anova_test(data = subscales.df, dv = value, wid = id, within = dd.subscale)
+
+# m.aov <- aov(value~factor(dd.subscale) + Error(factor(id)), data = anova.prep)
+
+#### Post-hoc tests ####
+# Pairwise comparisons
+pwc <- subscales.df %>% 
+  pairwise_t_test(
+    value ~ dd.subscale, paired = TRUE,
+    p.adjust.method = "bonferroni"
+  ) %>% 
+  mutate(p = scales::pvalue(p),
+         p.adj = scales::pvalue(p.adj, add_p = TRUE))
+
+
+# Boxplots
+# Adding coordinate positions for boxplot
+pwc <- pwc %>% add_xy_position(x = "dd.subscale")
+
+# Boxplot with p value
+p.subscales <- subscales.df %>% 
+  mutate(dd.subscale = factor(dd.subscale, levels = c("dd.ad.total", "dd.ne.total", "dd.rd.total"))) %>% 
+  
+  ggboxplot(x = "dd.subscale", y = "value", width = 0.5) +
+  stat_pvalue_manual(
+    pwc, label = "p.adj",
+    y.position = c(45, 50, 57),
+    size = 3
+  ) 
+
+
+
+subscales.df %>% 
+  mutate(dd.subscale = factor(dd.subscale, levels = c("dd.ad.total", "dd.ne.total", "dd.rd.total"))) %>% 
+  
+  ggboxplot(x = "dd.subscale", y = "value") +
+  stat_pvalue_manual(
+    pwc, label = "p.adj",
+    y.position = c(45, 50, 57)
+  ) 
+  
+ 
+
 
 ma.final %>% 
   pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
@@ -114,22 +159,23 @@ lm.mv <- lm(cbind(dd.ad.total, dd.ne.total, dd.rd.total) ~ audit.total + sds.tot
 
   
 ##### Bar Chart with error bar #####
-ma.final %>% 
-  pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>% 
-  group_by(dd.subscale) %>% 
-  summarise(mean = mean(value),
-            sd = sd(value),
-            se = sd/sqrt(n())) %>% 
-  ggplot(aes(x = dd.subscale, y = mean, fill = dd.subscale)) +
-  geom_bar(stat = "identity", color = "black",
-           position = position_dodge()) +
-  geom_errorbar(aes(ymin = mean - sd, ymax = mean+sd), width = .2)
+
+  
+dd.subset.summ %>% 
+  ggplot(aes(x = dd.subscale, y = mean)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper)) +
+  plot.theme +
+  theme(
+    panel.grid.major.y = element_line(),
+    panel.grid.minor.y = element_line()
+  )
 
 ##### Error bar #####
 ma.final %>%
   pivot_longer(cols = c("dd.ad.total", "dd.rd.total", "dd.ne.total"), names_to = "dd.subscale") %>%
   ggplot(aes(x = dd.subscale, y = value, fill = dd.subscale)) +
-  stat_summary(geom = "errorbar", ) +
+  stat_summary(geom = "errorbar") +
   scale_y_continuous(breaks = seq(10, 30, 1))
 
 
