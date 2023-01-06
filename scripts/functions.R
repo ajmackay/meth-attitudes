@@ -7,9 +7,9 @@ format.p <- function(dat){
   }
 }
 
-format.p(anova.tbl)
+# format.p(anova.tbl)
 
-any(str_detect(class(anova.tbl), "data.frame"))
+# any(str_detect(class(anova.tbl), "data.frame"))
 
 #### Stop Quietly ####
 stop_quietly <- function() {

@@ -329,13 +329,16 @@ plt.subscales <- p.subscales +
   
   scale_x_discrete(labels = c("Agressive Driving", "Negative Emotional Driving", "Risky Driving")) +
   
-  labs(x = blank, y = blank) +
+  labs(x = "DDDI Subscale", y = "Score") +
   
   theme_minimal() +
   
   theme(
     panel.grid.major.x = blank,
-    axis.text.x = element_text(colour = "black", face = "bold", size = 9))
+    axis.text.x = element_text(colour = "black", face = "bold", size = 9),
+    axis.title.x = element_text(vjust = -1, size = 12),
+    axis.title.y = element_text(vjust = 1, size = 12)
+    )
 
 if(FALSE){
   ggsave(plt.subscales,
@@ -380,7 +383,18 @@ lm.mv %>%
              mutate(response = "dd.ad.total"), by = c("term" = "Variable", "response")
          )
 
+#### Those excluded from analysis ####
+survey.df %>% 
+  filter(ma.ingest) %>% count(status)
 
+survey.df %>% filter(ma.ingest, status != "Spam", !id %in% survey.screened$id) %>% count(ma.most.common)
+
+survey.df %>% 
+  filter(ma.ingest) %>% 
+  # mutate(ma.most.common = if_else(ma.most.common, "Yes", "No")) %>% 
+  
+  select(consent, status, ma.most.common) %>% 
+tbl_summary(type = list(where(is.logical) ~ "categorical"))
 
 # Exporting ---------------------------------------------------------------
 #### TODO: Table captions with numbers ####

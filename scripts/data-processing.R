@@ -36,8 +36,19 @@ if(!is_empty(to.move)){
   
 }else survey.raw <- readRDS("objects/survey-raw.RData")
 
+# Contains all responses (cleaned - not filtered)
+survey.df <- survey.raw %>% 
+  mutate(ma.ingest = fct_recode(as_factor(q47)),
+            ma.ingest = ma.ingest == "Yes",
+            ma.ingest = replace_na(ma.ingest, FALSE),
+            ma.most.common = q48 == "Yes",
+         consent = q25 == "Yes",
+         age = q19,
+         
+         .keep = "unused")
 
-
+survey.df %>% 
+  filter(ma.ingest, status!= "Spam", ma.most.common, finished)
 
 # Data Processing -------------------------------------------------------------------
 #### Screened ####
@@ -139,8 +150,8 @@ audit.df <- survey.screened %>%
                                                    "4" = "Four or more times a week"))
     ),
     audit.total = audit.freq + audit.typical + audit.six,
-    audit.risky = ifelse((q13 == "Male" & audit.total >= 4 | 
-                            q13 == "Female" & audit.total >= 3), TRUE, FALSE), # https://www.hepatitis.va.gov/alcohol/treatment/audit-c.asp (also see protocol)
+    audit.risky = ifelse((q13 == "Male" & audit.total > 4 | 
+                            q13 == "Female" & audit.total > 2), TRUE, FALSE), # https://www.hepatitis.va.gov/alcohol/treatment/audit-c.asp (also see protocol)
     audit.full = !(id %in% alcohol.ids & is.na(audit.total)),
     audit.total = if_else(audit.full & is.na(audit.total), 0, audit.total))
 
@@ -781,7 +792,6 @@ ma.id <- summ.df %>%
          sds.full,
          k6.full,
          trait.full,
-         state.full,
          dd.full,
          # dui.strat.full,
          # duid.strat.full,
@@ -793,7 +803,7 @@ ma.id <- summ.df %>%
 ma.final <- summ.df %>% 
   filter(id %in% ma.id) %>% 
   select(id, age, sex, education, area.live,
-         audit.total, sds.total, k6.total, trait.total, state.total, 
+         audit.total, sds.total, k6.total, trait.total, 
          dd.ne.total, dd.ad.total, dd.rd.total, dd.total)
 
 ma.final <- ma.final %>% 

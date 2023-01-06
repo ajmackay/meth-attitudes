@@ -22,3 +22,4 @@ packages <- c("janitor",
 
 librarian::shelf(packages)
 
+message(crayon::green("Packages Loaded Successfully"))
