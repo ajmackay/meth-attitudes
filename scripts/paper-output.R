@@ -118,17 +118,16 @@ p.dems <- dat %>%
   
   theme_minimal(base_size = 10) +
   theme(
-    strip.text = element_text(size = 9,
-                              face = "bold"),
-    axis.text = element_text(colour = .black),
+    strip.text = element_text(size = 11),
+    axis.text = element_text(colour = "black"),
     
-    panel.grid.major = blank,
-    panel.grid.minor = blank,
+    # panel.grid.major = blank,
+    # panel.grid.minor = blank,
     
     axis.text.x = blank
   )
 
-if(FALSE){
+if(!TRUE){
   p.dems %>% ggsave(filename = "output/dems-plot.png",
          height = 5,
          width = 7)
@@ -196,25 +195,32 @@ if(FALSE){
 ##### Plot #####
 p.subset <- p.subset.comparison +
   theme_minimal() +
-  labs(x = blank) +
+  labs(x = "Number of Predictors", 
+       y = blank) +
   theme(panel.background = blank,
         panel.grid.major.y = element_line(),
         panel.grid.minor.y = element_line(),
-        panel.grid.major.x = blank,
+        panel.grid.major.x = element_line(),
         panel.grid.minor.x = blank,
         
+        axis.text.x = element_text(colour = "black"),
+        
         strip.background = element_rect(fill = "white",
-                                        color = "black"),
-        strip.text = element_text(colour = "black", face = "bold",
-                                  size = 10))
+                                        color = "white"),
+        strip.text = element_text(colour = "black",
+                                  size = 11),
+        
+        axis.title.x = element_text(vjust = -1, colour = "black")
+        
+        )
 
 # Save plot
-if(FALSE){
+if(!TRUE){
 ggsave(p.subset,
        width = 7,
        height = 4,
        units = "in",
-       filename = "output/tmp/subset.png")
+       filename = "output/subset-fit.png")
 
 
 }
@@ -336,11 +342,11 @@ plt.subscales <- p.subscales +
   theme(
     panel.grid.major.x = blank,
     axis.text.x = element_text(colour = "black", face = "bold", size = 9),
-    axis.title.x = element_text(vjust = -1, size = 12),
-    axis.title.y = element_text(vjust = 1, size = 12)
+    axis.title.x = element_text(vjust = -1, size = 11, colour = "black"),
+    axis.title.y = element_text(vjust = 1, size = 11, colour = "black")
     )
 
-if(FALSE){
+if(!TRUE){
   ggsave(plt.subscales,
          width = 7,
          height = 5,
@@ -393,8 +399,11 @@ survey.df %>%
   filter(ma.ingest) %>% 
   # mutate(ma.most.common = if_else(ma.most.common, "Yes", "No")) %>% 
   
-  select(consent, status, ma.most.common) %>% 
+  select(consent, status, ma.most.common, finished) %>% 
 tbl_summary(type = list(where(is.logical) ~ "categorical"))
+
+survey.df %>% 
+  filter(ma.ingest, ma.most.common, status != "Spam", finished) %>% glimpse
 
 # Exporting ---------------------------------------------------------------
 #### TODO: Table captions with numbers ####
