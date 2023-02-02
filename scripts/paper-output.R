@@ -2,7 +2,7 @@ if(!"packages" %in% ls()){
   source("scripts/load-packages.R")
 }
 
-require("gdtools") # For font name
+
 
 # If data is updated or significant changes made to script then source the scripts below
 # Otherwise just load all objects
@@ -335,7 +335,7 @@ plt.subscales <- p.subscales +
   
   scale_x_discrete(labels = c("Agressive Driving", "Negative Emotional Driving", "Risky Driving")) +
   
-  labs(x = "DDDI Subscale", y = "Score") +
+  labs(x = "DDDI Subscale", y = "DDDI Score") +
   
   theme_minimal() +
   

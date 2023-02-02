@@ -17,7 +17,8 @@ packages <- c("janitor",
               "officer", 
               "shadowtext", 
               "rstatix", # For ANOVA test and quick summary stats
-              "ggpubr" # Publishable graphs
+              "ggpubr", # Publishable graphs
+              "gdtools" # For font name
               )
 
 librarian::shelf(packages)
