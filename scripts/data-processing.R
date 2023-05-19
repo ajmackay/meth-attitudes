@@ -150,7 +150,7 @@ audit.df <- survey.screened %>%
                                                    "4" = "Four or more times a week"))
     ),
     audit.total = audit.freq + audit.typical + audit.six,
-    audit.risky = ifelse((q13 == "Male" & audit.total > 4 | 
+    audit.risky = ifelse((q13 == "Male" & audit.total > 3 | 
                             q13 == "Female" & audit.total > 2), TRUE, FALSE), # https://www.hepatitis.va.gov/alcohol/treatment/audit-c.asp (also see protocol)
     audit.full = !(id %in% alcohol.ids & is.na(audit.total)),
     audit.total = if_else(audit.full & is.na(audit.total), 0, audit.total))

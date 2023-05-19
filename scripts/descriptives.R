@@ -139,7 +139,11 @@ staxi.df %>%
 
 
 # Demographics ------------------------------------------------------------
-
+# Age of first use
+summ.df %>% 
+  filter(id %in% ma.id) %>% 
+  count(ma.use.peak) %>% 
+  mutate(prop = n / sum(n) %>% round(3))
 
 
 # DUID Instances and Attitudes  --------------------------------------------------

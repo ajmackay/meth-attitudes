@@ -116,7 +116,7 @@ pwc <- subscales.df %>%
 # Adding coordinate positions for boxplot
 pwc <- pwc %>% add_xy_position(x = "dd.subscale")
 
-# Boxplot with p value
+#### Boxplot with p value ####
 p.subscales <- subscales.df %>% 
   mutate(dd.subscale = factor(dd.subscale, levels = c("dd.ad.total", "dd.ne.total", "dd.rd.total"))) %>% 
   
