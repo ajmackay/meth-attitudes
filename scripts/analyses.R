@@ -1,8 +1,5 @@
 # Data Prep ---------------------------------------------------------------
-
-if(!"packages" %in% ls()){
-  source("scripts/load-packages.R")
-}
+if(!"packages" %in% ls()) source("scripts/load-packages.R")
 
 source("scripts/functions.R")
 
@@ -23,16 +20,48 @@ model.vars <- c(
   "dd.total"
 )
 
-#### Using dummy variables for education ####
-# dummy.vars <- fastDummies::dummy_cols(ma.final, select_columns = "education") %>% 
-#   select(-c(id, education, dd.ne.total, dd.ad.total, dd.rd.total)) 
+# Using Risky driving subscale only for Dangerous Driving
+model.vars2 <- c(
+  "age",
+  "sex",
+  "education",
+  "area.live",
+  "audit.total",
+  "sds.total",
+  "k6.total",
+  "trait.total",
+  # "state.total",
+  "dd.rd.total"
+)
+
+# Using Excluding Aggressive Driving from DDDI
+model.vars3 <- c(
+  "age",
+  "sex",
+  "education",
+  "area.live",
+  "audit.total",
+  "sds.total",
+  "k6.total",
+  "trait.total",
+  # "state.total",
+  "dd.total.ad.rm"
+)
 
 model <- lm(dd.total ~ ., data = select(ma.final, all_of(model.vars)))
+m2 <- lm(dd.rd.total ~., data = select(ma.final, all_of(model.vars2)))
 
 # Best possible based on adj R2
 all.poss <- ols_step_all_possible(model)
+all.poss2 <- ols_step_all_possible(m2)
 
 best.poss <- all.poss %>% 
+  group_by(n) %>% 
+  arrange(n, desc(adjr)) %>% 
+  slice(1) %>% 
+  select(n, predictors, rsquare, adjr, aic)
+
+best.poss2 <- all.poss2 %>% 
   group_by(n) %>% 
   arrange(n, desc(adjr)) %>% 
   slice(1) %>% 
@@ -66,7 +95,24 @@ p.subset.comparison <- best.poss %>%
                `adjr` =  "Adjusted R2", 
                `aic` =  "AIC")))
 
+p.subset.comparison2 <- best.poss2 %>% 
+  pivot_longer(cols = c(adjr, aic), names_to = "measure") %>% 
+  
+  ggplot(aes(x = n, y = value)) +
+  geom_point(size = 2) +
+  geom_line() +
+  
+  scale_x_continuous(breaks = seq(1, 8)) +
+  labs(y = element_blank(),
+       x = "N") +
+  
+  facet_wrap(~measure, scales = "free", ncol = 2,
+             labeller = as_labeller(c(
+               `adjr` =  "Adjusted R2", 
+               `aic` =  "AIC")))
+
 final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total))
+final.model2 <- lm(dd.rd.total ~ ., select(ma.final, dd.rd.total, trait.total, sds.total, audit.total))
 
 #### Effect Sizes ####
 final.model.df <- ma.final %>% 
@@ -75,6 +121,11 @@ final.model.df <- ma.final %>%
 final.model.effects <- lm.effect.size(final.model.df, iv = c("audit.total", "sds.total", "trait.total"), 
                dv = "dd.total")
 
+final.model.df2 <- ma.final %>% 
+  select(dd.rd.total, audit.total, sds.total, trait.total)
+
+final.model.effects2 <- lm.effect.size(final.model.df2, iv = c("audit.total", "sds.total", "trait.total"), 
+                                      dv = "dd.rd.total")
 
 # DDDI Subsets ------------------------------------------------------------
 subscales.df <- ma.final %>% 
