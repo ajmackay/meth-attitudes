@@ -577,6 +577,7 @@ dd.df <- survey.screened %>%
     dd.rd.total = dd.rd.1 + dd.rd.2 + dd.rd.3 + dd.rd.4 + dd.rd.5 + dd.rd.6 + dd.rd.7 + dd.rd.8 + dd.rd.9 + dd.rd.10 + 
       dd.rd.11,
     dd.total = dd.ne.total + dd.ad.total + dd.rd.total,
+    dd.total.ad.rm = dd.ne.total + dd.rd.total,
     dd.full = !is.na(dd.total))
 
 
@@ -773,7 +774,7 @@ summ.df <- dems.df %>%
   left_join(select(ma.df, id, ma.use.peak, sds.total, sds.full, ma.type, ma.use.age)) %>% 
   left_join(select(k6.df, id, k6.total, k6.full, psychiatric.diagnosis)) %>% 
   left_join(select(staxi.df, id, state.total, state.full, trait.total, trait.full)) %>% 
-  left_join(select(dd.df, id, dd.ne.total, dd.ad.total, dd.rd.total, dd.total, dd.full)) %>% 
+  left_join(select(dd.df, id, dd.ne.total, dd.ad.total, dd.rd.total, dd.total, dd.total.ad.rm, dd.full)) %>% 
   left_join(select(dui.inst.att.df, id, dui.inst.revoked, dui.att.total, dui.att.full)) %>% 
   left_join(select(dui.strat.df, id, dui.strat.total, dui.strat.full)) %>%
   left_join(select(duid.inst.att.df, id, duid.inst.revoked, duid.att.total, duid.att.full)) %>% 
@@ -802,7 +803,7 @@ ma.final <- summ.df %>%
   filter(id %in% ma.id) %>% 
   select(id, age, sex, education, area.live,
          audit.total, sds.total, k6.total, trait.total, 
-         dd.ne.total, dd.ad.total, dd.rd.total, dd.total)
+         dd.ne.total, dd.ad.total, dd.rd.total, dd.total, dd.total.ad.rm)
 
 ma.final <- ma.final %>% 
   mutate(sex = factor(sex, levels = c("Male", "Female")))
