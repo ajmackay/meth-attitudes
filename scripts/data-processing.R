@@ -47,8 +47,6 @@ survey.df <- survey.raw %>%
          
          .keep = "unused")
 
-survey.df %>% 
-  filter(ma.ingest, status!= "Spam", ma.most.common, finished)
 
 # Data Processing -------------------------------------------------------------------
 #### Screened ####
