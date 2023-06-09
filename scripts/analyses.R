@@ -1,5 +1,8 @@
 # Data Prep ---------------------------------------------------------------
-if(!"packages" %in% ls()) source("scripts/load-packages.R")
+
+if(!"packages" %in% ls()){
+  source("scripts/load-packages.R")
+}
 
 source("scripts/functions.R")
 
@@ -20,7 +23,6 @@ model.vars <- c(
   "dd.total"
 )
 
-# Using Risky driving subscale only for Dangerous Driving
 model.vars2 <- c(
   "age",
   "sex",
@@ -34,7 +36,7 @@ model.vars2 <- c(
   "dd.rd.total"
 )
 
-# Using Excluding Aggressive Driving from DDDI
+
 model.vars3 <- c(
   "age",
   "sex",
@@ -48,12 +50,20 @@ model.vars3 <- c(
   "dd.total.ad.rm"
 )
 
+
+
+#### Using dummy variables for education ####
+# dummy.vars <- fastDummies::dummy_cols(ma.final, select_columns = "education") %>% 
+#   select(-c(id, education, dd.ne.total, dd.ad.total, dd.rd.total)) 
+
 model <- lm(dd.total ~ ., data = select(ma.final, all_of(model.vars)))
-m2 <- lm(dd.rd.total ~., data = select(ma.final, all_of(model.vars2)))
+model.rd <- lm(dd.rd.total ~ ., data = select(ma.final, all_of(model.vars2)))
+model.ad.rm <- lm(dd.total.ad.rm ~.,  data = select(ma.final, all_of(model.vars3)))
 
 # Best possible based on adj R2
 all.poss <- ols_step_all_possible(model)
-all.poss2 <- ols_step_all_possible(m2)
+all.poss2 <- ols_step_all_possible(model.rd)
+all.poss3 <- ols_step_all_possible(model.ad.rm)
 
 best.poss <- all.poss %>% 
   group_by(n) %>% 
@@ -62,6 +72,12 @@ best.poss <- all.poss %>%
   select(n, predictors, rsquare, adjr, aic)
 
 best.poss2 <- all.poss2 %>% 
+  group_by(n) %>% 
+  arrange(n, desc(adjr)) %>% 
+  slice(1) %>% 
+  select(n, predictors, rsquare, adjr, aic)
+
+best.poss3 <- all.poss3 %>% 
   group_by(n) %>% 
   arrange(n, desc(adjr)) %>% 
   slice(1) %>% 
@@ -111,8 +127,25 @@ p.subset.comparison2 <- best.poss2 %>%
                `adjr` =  "Adjusted R2", 
                `aic` =  "AIC")))
 
+p.subset.comparison3 <- best.poss3 %>% 
+  pivot_longer(cols = c(adjr, aic), names_to = "measure") %>% 
+  
+  ggplot(aes(x = n, y = value)) +
+  geom_point(size = 2) +
+  geom_line() +
+  
+  scale_x_continuous(breaks = seq(1, 8)) +
+  labs(y = element_blank(),
+       x = "N") +
+  
+  facet_wrap(~measure, scales = "free", ncol = 2,
+             labeller = as_labeller(c(
+               `adjr` =  "Adjusted R2", 
+               `aic` =  "AIC")))
+
 final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total))
 final.model2 <- lm(dd.rd.total ~ ., select(ma.final, dd.rd.total, trait.total, sds.total, audit.total))
+final.model3 <- lm(dd.total.ad.rm ~ ., select(ma.final, dd.total.ad.rm, trait.total, sds.total, audit.total))
 
 #### Effect Sizes ####
 final.model.df <- ma.final %>% 
@@ -124,8 +157,14 @@ final.model.effects <- lm.effect.size(final.model.df, iv = c("audit.total", "sds
 final.model.df2 <- ma.final %>% 
   select(dd.rd.total, audit.total, sds.total, trait.total)
 
-final.model.effects2 <- lm.effect.size(final.model.df2, iv = c("audit.total", "sds.total", "trait.total"), 
-                                      dv = "dd.rd.total")
+final.model.effects2 <- lm.effect.size(final.model.df2, iv = c("audit.total", "sds.total", "trait.total"),
+                                       dv = "dd.rd.total")
+
+
+final.model.df3 <- ma.final %>% 
+  
+
+
 
 # DDDI Subsets ------------------------------------------------------------
 subscales.df <- ma.final %>% 
