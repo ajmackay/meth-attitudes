@@ -1,0 +1,11 @@
+Table B1,,,,
+Regression Models with the Highest Adjusted R2 within their Predictor Size Group (DV = Risky Driving Subscale),,,,
+N Predictors,Variables,R2,Adj R2,AIC
+1,Trait Anger,0.28,0.27,518.2
+2,"SDS, Trait Anger",0.39,0.37,507.72
+3,"AUDIT-C, SDS, Trait Anger",0.44,0.42,502.61
+4,"Education, AUDIT-C, SDS, Trait Anger",0.5,0.45,500.51
+5,"Education, Residential Area, AUDIT-C, SDS, Trait Anger",0.5,0.45,501.28
+6,"Sex, Education, Residential Area, AUDIT-C, SDS, Trait Anger",0.51,0.45,502.74
+7,"Sex, Education, Residential Area, AUDIT-C, SDS, K6, Trait Anger",0.51,0.44,504.54
+8,"Age, Sex, Education, Residential Area, AUDIT-C, SDS, K6, Trait Anger",0.51,0.43,506.54

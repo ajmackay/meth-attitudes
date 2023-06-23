@@ -23,6 +23,7 @@ model.vars <- c(
   "dd.total"
 )
 
+# Model with only risky driving as DV
 model.vars2 <- c(
   "age",
   "sex",
@@ -36,7 +37,7 @@ model.vars2 <- c(
   "dd.rd.total"
 )
 
-
+# Model with risky driving + negative emotional driving as DV
 model.vars3 <- c(
   "age",
   "sex",
@@ -144,7 +145,7 @@ p.subset.comparison3 <- best.poss3 %>%
                `aic` =  "AIC")))
 
 final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total))
-final.model2 <- lm(dd.rd.total ~ ., select(ma.final, dd.rd.total, trait.total, sds.total, audit.total))
+final.model2 <- lm(dd.rd.total ~ ., select(ma.final, dd.rd.total, trait.total, sds.total, audit.total, education))
 final.model3 <- lm(dd.total.ad.rm ~ ., select(ma.final, dd.total.ad.rm, trait.total, sds.total, audit.total))
 
 #### Effect Sizes ####
@@ -155,15 +156,17 @@ final.model.effects <- lm.effect.size(final.model.df, iv = c("audit.total", "sds
                dv = "dd.total")
 
 final.model.df2 <- ma.final %>% 
-  select(dd.rd.total, audit.total, sds.total, trait.total)
+  select(dd.rd.total, audit.total, sds.total, trait.total, education)
 
-final.model.effects2 <- lm.effect.size(final.model.df2, iv = c("audit.total", "sds.total", "trait.total"),
+final.model.effects2 <- lm.effect.size(final.model.df2, iv = c("audit.total", "sds.total", "trait.total", "education"),
                                        dv = "dd.rd.total")
 
 
 final.model.df3 <- ma.final %>% 
-  
+  select(dd.total.ad.rm, audit.total, sds.total, trait.total)
 
+final.model.effects3 <- lm.effect.size(final.model.df3, iv = c("audit.total", "sds.total", "trait.total"),
+                                       dv = "dd.total.ad.rm")
 
 
 # DDDI Subsets ------------------------------------------------------------
@@ -281,6 +284,10 @@ ma.final %>%
   select(names(final.model.df)) %>% 
   ggpairs()
 }
+
+ma.final %>% 
+  select(where(is.numeric), -id) %>% 
+  ggpairs()
 
 #### Multicolinearity ####
 model <- lm(dd.total ~ ., data = final.model.df)

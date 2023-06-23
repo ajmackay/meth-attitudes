@@ -1,0 +1,12 @@
+Table B2,,,,
+Regression Models with Highest Adjusted R2 within Predictor Size Group with Total of Risky Driving and Negative Emotional Driving Subscales as Dependent Variable,,,,
+N Predictors,Variables,R2,Adj R2,AIC
+1,Trait Anger,0.35,0.34,576.4
+2,AUDIT-C Trait Anger,0.43,0.41,568.6
+3,AUDIT-C SDS Trait Anger,0.46,0.44,566.44
+4,Education AUDIT-C SDS Trait Anger,0.49,0.45,567.09
+5,Education Residential Area AUDIT-C SDS Trait Anger,0.51,0.46,566.91
+6,Sex Education Residential Area AUDIT-C SDS Trait Anger,0.51,0.45,568.48
+7,Sex Education Residential Area AUDIT-C SDS K6 Trait Anger,0.51,0.45,570.02
+8,Age Sex Education Residential Area AUDIT-C SDS K6 Trait Anger,0.51,0.44,571.99
+Note. Xxxyyxx,,,,

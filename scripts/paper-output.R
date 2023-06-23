@@ -3,7 +3,6 @@ if(!"packages" %in% ls()){
 }
 
 
-
 # If data is updated or significant changes made to script then source the scripts below
 # Otherwise just load all objects
 if(FALSE){
@@ -214,6 +213,27 @@ p.subset <- p.subset.comparison +
         
         )
 
+p.subset2 <- p.subset.comparison2 +
+  theme_minimal() +
+  labs(x = "Number of Predictors", 
+       y = blank) +
+  theme(panel.background = blank,
+        panel.grid.major.y = element_line(),
+        panel.grid.minor.y = element_line(),
+        panel.grid.major.x = element_line(),
+        panel.grid.minor.x = blank,
+        
+        axis.text.x = element_text(colour = "black"),
+        
+        strip.background = element_rect(fill = "white",
+                                        color = "white"),
+        strip.text = element_text(colour = "black",
+                                  size = 11),
+        
+        axis.title.x = element_text(vjust = -1, colour = "black")
+        
+  )
+
 # Save plot
 if(!TRUE){
 ggsave(p.subset,
@@ -242,17 +262,44 @@ best.poss %>%
          predictors = str_replace_all(predictors, "k6.total", "Psychological Distress")
          
   ) %>% write_csv("output/regression/2022-12-05_best-subsets-models.csv")
-  flextable() %>% 
-  set_header_labels(n = "N",
-                    predictors = "Predictors",
-                    rsquare = "R2",
-                    adjr = "Adj R2",
-                    aic = "AIC") %>% 
-  fontsize(size = 10, part = "all") %>% 
-  font(fontname = fontname)
+  # flextable() %>% 
+  # set_header_labels(n = "N",
+  #                   predictors = "Predictors",
+  #                   rsquare = "R2",
+  #                   adjr = "Adj R2",
+  #                   aic = "AIC") %>% 
+  # fontsize(size = 10, part = "all") %>% 
+  # font(fontname = fontname)
+
+tbl.best.poss2 <- best.poss2 %>% 
+  mutate(across(where(is.numeric), ~round(.x, 2)),
+         predictors = str_replace_all(predictors, "trait.total", "Trait Anger"),
+         predictors = str_replace_all(predictors, "state.total", "State Anger"),
+         predictors = str_replace_all(predictors, "audit.total", "Alcohol Use"),
+         predictors = str_replace_all(predictors, "area.live", "Residential Area"),
+         predictors = str_replace_all(predictors, "sds.total", "Methamphetamine Dependence"),
+         predictors = str_replace_all(predictors, "age", "Age"),
+         predictors = str_replace_all(predictors, "sex", "Sex"),
+         predictors = str_replace_all(predictors, "education", "Education"),
+         predictors = str_replace_all(predictors, "k6.total", "Psychological Distress"))
+
+tbl.best.poss2 %>% 
+  write_csv("output/regression/best-subsets-models_risky-driving-dv.csv")
+
+tbl.best.poss3 <- best.poss3 %>% 
+  mutate(across(where(is.numeric), ~round(.x, 2)),
+         predictors = str_replace_all(predictors, "trait.total", "Trait Anger"),
+         predictors = str_replace_all(predictors, "state.total", "State Anger"),
+         predictors = str_replace_all(predictors, "audit.total", "Alcohol Use"),
+         predictors = str_replace_all(predictors, "area.live", "Residential Area"),
+         predictors = str_replace_all(predictors, "sds.total", "Methamphetamine Dependence"),
+         predictors = str_replace_all(predictors, "age", "Age"),
+         predictors = str_replace_all(predictors, "sex", "Sex"),
+         predictors = str_replace_all(predictors, "education", "Education"),
+         predictors = str_replace_all(predictors, "k6.total", "Psychological Distress"))
 
 
-
+write_csv(tbl.best.poss3, "output/regression/best-subsets-models_ad-ne-dv.csv")
 
 #### Regression Output ####
 
@@ -388,6 +435,9 @@ lm.mv %>%
            lm.effect.size(ma.final, dv = "dd.ad.total", iv = c("audit.total", "sds.total", "trait.total")) %>% 
              mutate(response = "dd.ad.total"), by = c("term" = "Variable", "response")
          )
+
+lm.effect.size(ma.final, dv = "dd.rd.total", iv = c("audit.total", "sds.total", "trait.total"))
+lm.effect.size(ma.final, dv = 'dd.total', iv = c("audit.total", "sds.total", "trait.total"))
 
 #### Those excluded from analysis ####
 survey.df %>% 
