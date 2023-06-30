@@ -236,11 +236,11 @@ p.subset2 <- p.subset.comparison2 +
 
 # Save plot
 if(!TRUE){
-ggsave(p.subset,
+ggsave(p.subset2,
        width = 7,
        height = 4,
        units = "in",
-       filename = "output/subset-fit.png")
+       filename = "output/subset2-fit.svg")
 
 
 }
@@ -309,6 +309,9 @@ write_csv(tbl.best.poss3, "output/regression/best-subsets-models_ad-ne-dv.csv")
 final.model.ci <- confint(final.model) %>% as_tibble() %>% 
     mutate(CI = str_c(round(`2.5 %`, 2), " - ", round(`97.5 %`, 2)))
 
+final.model.rd.ci <- confint(final.model.rd) %>% as_tibble() %>% 
+  mutate(CI = str_c(round(`2.5 %`, 2), " - ", round(`97.5 %`, 2)))
+
 # Model parameters
 model.params = list(
   f.stat = round(glance(final.model)$statistic, 2),
@@ -323,6 +326,21 @@ model.params = list(
   
   aic = round(glance(final.model)$AIC, 2)
 
+)
+
+model.params.rd <- list(
+  f.stat = round(glance(final.model.rd)$statistic, 2),
+  
+  dfs = str_c("(", glance(final.model.rd)$df, ", ", glance(final.model.rd)$df.residual, ")"),
+  
+  p.value = round(glance(final.model.rd)$p.value, 3),
+  
+  r2 = round(glance(final.model.rd)$r.squared, 2),
+  
+  adjr = round(glance(final.model.rd)$adj.r.squared, 2),
+  
+  aic = round(glance(final.model.rd)$AIC, 2)
+  
 )
 
 
@@ -354,7 +372,29 @@ ft.regression <- final.model %>% tidy() %>%
   # fontsize(size = 10, part = "all") %>% 
   # font(fontname = fontname)
 
+## Final Model with RD as DV
 
+
+final.model.rd %>% tidy() %>% 
+  mutate(p.value = if_else(p.value < .001, "<.001", as.character(round(p.value, 3))),
+         CI = final.model.rd.ci$CI) %>% 
+  
+  left_join(final.model.effects.rd, by = c("term" = "Variable")) %>% 
+  select(term, Estimate = estimate, CI, Partial, F2, p = p.value) %>% 
+  mutate(across(where(is.numeric), ~round(.x, 2)),
+         Estimate = as.character(Estimate)) %>% 
+  
+  add_row(
+    tibble(term = 
+             c("", "F", "df", "p", "R2", "Adj R2", "AIC"),
+           Estimate = 
+             c("", model.params.rd$f.stat, model.params.rd$dfs, model.params.rd$p.value,
+               model.params.rd$r2, model.params.rd$adjr, model.params.rd$aic
+               
+             ))
+  ) %>% 
+  
+  write_csv("output/regression/fina-model_rd-dv.csv")
 
 
 ma.final %>% 

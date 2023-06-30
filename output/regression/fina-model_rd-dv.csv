@@ -1,0 +1,12 @@
+term,Estimate,CI,Partial,F2,p
+(Intercept),6.64,0.64 - 12.63,NA,NA,0.03
+trait.total,0.54,0.28 - 0.79,0.44,0.2,<.001
+sds.total,0.93,0.33 - 1.52,0.34,0.12,0.003
+audit.total,0.78,0.19 - 1.36,0.3,0.08,0.01
+,,NA,NA,NA,NA
+F,19.07,NA,NA,NA,NA
+df,"(3, 73)",NA,NA,NA,NA
+p,0,NA,NA,NA,NA
+R2,0.44,NA,NA,NA,NA
+Adj R2,0.42,NA,NA,NA,NA
+AIC,502.61,NA,NA,NA,NA

@@ -147,6 +147,8 @@ p.subset.comparison3 <- best.poss3 %>%
 final.model <- lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total))
 final.model2 <- lm(dd.rd.total ~ ., select(ma.final, dd.rd.total, trait.total, sds.total, audit.total, education))
 final.model3 <- lm(dd.total.ad.rm ~ ., select(ma.final, dd.total.ad.rm, trait.total, sds.total, audit.total))
+# Final model with RD as DV and variables from model 1 as IVs
+final.model.rd <- lm(dd.rd.total ~ ., select(ma.final, dd.rd.total, trait.total, sds.total, audit.total))
 
 #### Effect Sizes ####
 final.model.df <- ma.final %>% 
@@ -160,6 +162,13 @@ final.model.df2 <- ma.final %>%
 
 final.model.effects2 <- lm.effect.size(final.model.df2, iv = c("audit.total", "sds.total", "trait.total", "education"),
                                        dv = "dd.rd.total")
+
+## RD DV
+final.model.rd.df <- ma.final %>% 
+  select(dd.rd.total, audit.total, sds.total, trait.total)
+
+final.model.effects.rd <- lm.effect.size(final.model.rd.df, iv = c("audit.total", "sds.total", "trait.total"), 
+                                         dv = "dd.rd.total")
 
 
 final.model.df3 <- ma.final %>% 
