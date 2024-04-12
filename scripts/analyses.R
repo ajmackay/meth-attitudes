@@ -283,7 +283,37 @@ ma.final %>%
 
 # 
 
+# Interactions ----
 
+lm(dd.total ~ ., select(ma.final, dd.total, trait.total, sds.total, audit.total))
+interactions <- lm(dd.total ~ 'ma.final + ', select(ma.final, dd.total, trait.total, sds.total, audit.total))
+
+interaction.model <- lm(dd.total ~ trait.total + sds.total + audit.total + 
+     trait.total:sds.total + sds.total:audit.total + trait.total:audit.total, data = ma.final)
+
+summary(interaction.model)
+
+interactions::interact_plot(final.model, pred = trait.total, modx = sds.total)
+
+
+# Correlation Table ----
+correlation.matrix <- ma.final %>% 
+  select(all_of(model.vars)) %>% 
+  select(where(is.numeric)) %>% 
+  cor() %>% as_tibble() %>% mutate(across(.cols = everything(), ~round(., 3)))
+
+numeric.vars <- ma.final %>% 
+  select(all_of(model.vars)) %>% 
+  select(where(is.numeric))
+
+
+
+
+if(FALSE) {
+  apaTables::apa.cor.table(numeric.vars,
+                           filename = "correlation-matrix.docx",
+                           table.number = 1)
+}
 
 # Assumptions -------------------------------------------------------------
 #### Multicolinearity ####
